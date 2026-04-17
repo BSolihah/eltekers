@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Basis Data Eltekers</title>
+    <!-- Vue.js CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #app { max-width: 800px; margin: auto; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>[[ message ]]</h1>
+        <p>Selamat datang di Sistem Basis Data Eltekers (Ling Tien Kung).</p>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            delimiters: ['[[', ']]'], // Agar tidak konflik dengan template tag Django
+            data() {
+                return {
+                    message: 'Halo dari Vue.js!'
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

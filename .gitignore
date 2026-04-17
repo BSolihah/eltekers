@@ -1,0 +1,15 @@
+# Django
+*.pyc
+*__pycache__*
+db.sqlite3
+.DS_Store
+
+# Environments
+venv/
+ENV/
+env/
+.env
+
+# Project specific
+issue.md
+draft_planning.txt
