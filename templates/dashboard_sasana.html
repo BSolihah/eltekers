@@ -6,9 +6,10 @@
 <div id="app" v-cloak>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h2"><i class="bi bi-house-heart me-2 text-primary"></i>Dashboard Pengurus Sasana</h1>
+        <span v-if="sasana" class="badge bg-primary fs-6">[[ sasana.nama ]]</span>
     </div>
     
-    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
         <div class="col">
             <div class="card h-100 border-start border-primary border-4 shadow-sm">
                 <div class="card-body">
@@ -35,9 +36,24 @@
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
+    <!-- Navigasi Tab -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm">
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'peserta' }]" @click="activeTab = 'peserta'">
+                <i class="bi bi-people me-2"></i>Daftar Peserta
+            </button>
+        </li>
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'edit_sasana' }]" @click="activeTab = 'edit_sasana'">
+                <i class="bi bi-pencil-square me-2"></i>Edit Profil Sasana
+            </button>
+        </li>
+    </ul>
+
+    <!-- Section Daftar Peserta -->
+    <div v-if="activeTab === 'peserta'" class="card shadow-sm mb-4">
         <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3">
-            <h4 class="mb-3 mb-md-0"><i class="bi bi-people me-2"></i>Daftar Peserta Sasana</h4>
+            <h4 class="mb-3 mb-md-0">Daftar Peserta Sasana</h4>
             <div class="d-flex gap-2">
                 <div class="input-group">
                     <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
@@ -53,7 +69,6 @@
                             <th class="ps-4">NIK</th>
                             <th>Nama</th>
                             <th>No HP</th>
-                            <th>Kecamatan</th>
                             <th class="pe-4 text-end">Aksi</th>
                         </tr>
                     </thead>
@@ -62,18 +77,87 @@
                             <td class="ps-4">[[ p.nik ]]</td>
                             <td class="fw-bold">[[ p.account.nama ]]</td>
                             <td>[[ p.no_hp ]]</td>
-                            <td>[[ p.sasana ? p.sasana.nama : '-' ]]</td>
                             <td class="pe-4 text-end">
                                 <button class="btn btn-sm btn-outline-info me-1" title="Lihat Detail"><i class="bi bi-eye"></i></button>
                                 <button class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></button>
                             </td>
                         </tr>
                         <tr v-if="filteredPeserta.length === 0">
-                            <td colspan="5" class="text-center py-4 text-muted">Tidak ada data peserta yang sesuai.</td>
+                            <td colspan="4" class="text-center py-4 text-muted">Tidak ada data peserta yang sesuai.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Section Edit Profil Sasana -->
+    <div v-if="activeTab === 'edit_sasana'" class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h4 class="mb-0">Edit Profil Sasana</h4>
+        </div>
+        <div class="card-body">
+            <div v-if="updateSuccess" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Profil sasana berhasil diperbarui!
+                <button type="button" class="btn-close" @click="updateSuccess = false"></button>
+            </div>
+            
+            <form @submit.prevent="updateSasana" v-if="sasana">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nama Sasana</label>
+                    <input type="text" class="form-control" v-model="sasana.nama" required>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Propinsi</label>
+                        <select class="form-select" v-model="sasana.propinsi" @change="fetchRegencies(true)" required>
+                            <option value="">-- Pilih Propinsi --</option>
+                            <option v-for="prov in provinces" :key="prov.code" :value="prov.name" :data-code="prov.code">
+                                [[ prov.name ]]
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Kabupaten/Kota</label>
+                        <select class="form-select" v-model="sasana.kabupaten" @change="fetchDistricts(true)" :disabled="!sasana.propinsi" required>
+                            <option value="">-- Pilih Kabupaten --</option>
+                            <option v-for="reg in regencies" :key="reg.code" :value="reg.name" :data-code="reg.code">
+                                [[ reg.name ]]
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Kecamatan</label>
+                        <select class="form-select" v-model="sasana.kecamatan" :disabled="!sasana.kabupaten" required>
+                            <option value="">-- Pilih Kecamatan --</option>
+                            <option v-for="dist in districts" :key="dist.code" :value="dist.name">
+                                [[ dist.name ]]
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Desa/Kelurahan Lengkap</label>
+                    <input type="text" class="form-control" v-model="sasana.kelurahan_desa" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Koordinat Map (Google Maps Link/Coords)</label>
+                    <input type="text" class="form-control" v-model="sasana.map" placeholder="Contoh: -6.6000, 106.8000">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Profil/Deskripsi Singkat</label>
+                    <textarea class="form-control" v-model="sasana.profil" rows="4"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" :disabled="saving">
+                    <span v-if="saving" class="spinner-border spinner-border-sm me-2"></span>
+                    Simpan Perubahan
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -86,13 +170,21 @@
         delimiters: ['[[', ']]'],
         data() {
             return {
+                activeTab: 'peserta',
                 stats: {
                     total_peserta: {{ stats.total_peserta }},
                     total_instruktur: {{ stats.total_instruktur }},
                     total_pengurus: {{ stats.total_pengurus }}
                 },
                 pesertaList: [],
-                search: ''
+                search: '',
+                sasana: null,
+                provinces: [],
+                regencies: [],
+                districts: [],
+                saving: false,
+                updateSuccess: false,
+                initialLoad: true
             }
         },
         computed: {
@@ -107,18 +199,110 @@
         },
         mounted() {
             this.fetchPeserta();
+            this.fetchAdminSasanaData();
+            this.fetchProvinces();
         },
         methods: {
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            },
+            async fetchAdminSasanaData() {
+                // Dalam skenario ideal, API mengembalikan sasana yang dipegang admin ini.
+                // Untuk demo, asumsikan admin mengelola sasana dengan filter tertentu, atau mengambil dari daftar.
+                try {
+                    // Karena backend saat ini belum memfilter by admin_sasana di endpoint list,
+                    // kita asumsikan ambil yang pertama atau perlu disesuaikan di backend nanti.
+                    const response = await fetch('/api/sasana/');
+                    const data = await response.json();
+                    if(data.length > 0) {
+                        this.sasana = data[0]; // TODO: Backend harus me-return sasana spesifik untuk admin ini
+                        
+                        // Load dependencies untuk dropdown berdasarkan sasana saat ini
+                        if(this.sasana.propinsi) {
+                            await this.fetchRegencies(false);
+                        }
+                        if(this.sasana.kabupaten) {
+                            await this.fetchDistricts(false);
+                        }
+                    }
+                } catch(error) { console.error(error); }
+            },
             async fetchPeserta() {
                 try {
                     const response = await fetch('/api/peserta/');
-                    const data = await response.json();
-                    this.pesertaList = data;
-                } catch(error) {
-                    console.error("Error fetching peserta:", error);
+                    this.pesertaList = await response.json();
+                } catch(error) { console.error(error); }
+            },
+            async fetchProvinces() {
+                try {
+                    const response = await fetch('https://wilayah.id/api/provinces.json');
+                    const json = await response.json();
+                    this.provinces = json.data;
+                } catch (error) { console.error('Error fetching provinces:', error); }
+            },
+            async fetchRegencies(resetChild = false) {
+                if (resetChild) {
+                    this.sasana.kabupaten = '';
+                    this.sasana.kecamatan = '';
+                    this.districts = [];
                 }
+                this.regencies = [];
+                
+                const selectedProv = this.provinces.find(p => p.name === this.sasana.propinsi);
+                if (selectedProv) {
+                    try {
+                        const response = await fetch(`https://wilayah.id/api/regencies/${selectedProv.code}.json`);
+                        const json = await response.json();
+                        this.regencies = json.data;
+                    } catch (error) { console.error('Error fetching regencies:', error); }
+                }
+            },
+            async fetchDistricts(resetChild = false) {
+                if (resetChild) {
+                    this.sasana.kecamatan = '';
+                }
+                this.districts = [];
+                
+                const selectedReg = this.regencies.find(r => r.name === this.sasana.kabupaten);
+                if (selectedReg) {
+                    try {
+                        const response = await fetch(`https://wilayah.id/api/districts/${selectedReg.code}.json`);
+                        const json = await response.json();
+                        this.districts = json.data;
+                    } catch (error) { console.error('Error fetching districts:', error); }
+                }
+            },
+            async updateSasana() {
+                this.saving = true;
+                this.updateSuccess = false;
+                try {
+                    const response = await fetch(`/api/sasana/${this.sasana.id}/`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(this.sasana)
+                    });
+                    if (response.ok) {
+                        this.updateSuccess = true;
+                    }
+                } catch (error) { console.error(error); }
+                finally { this.saving = false; }
             }
         }
     }).mount('#app')
 </script>
+
 {% endblock %}

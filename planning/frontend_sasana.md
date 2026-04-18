@@ -37,7 +37,7 @@ Sebagian besar pengguna aplikasi ini adalah kelompok **pra-manula dan manula den
   - **Manajemen Peserta**: Tabel responsif dengan fitur pencarian (NIK/Nama).
   - **Form Peserta**: Form detail untuk input data peserta termasuk riwayat kesehatan (Keterbatasan/Kendala).
   - **Form Instruktur/Pengurus**: Form dengan validasi format nomor HP dan ID Instruktur.
-  - **Edit Profil Sasana**: Form untuk melengkapi dan memperbarui informasi detail sasana (seperti alamat lengkap, koordinat peta/map, dan profil deskriptif).
+  - **Edit Profil Sasana**: Form untuk melengkapi dan memperbarui informasi detail sasana. Pengisian alamat (Propinsi, Kabupaten, Kecamatan) **wajib menggunakan *dropdown search* dinamis yang terhubung dengan API wilayah Indonesia** untuk mencegah kesalahan pengetikan, selain itu terdapat field untuk koordinat peta/map, dan profil deskriptif.
 
 ### C. Halaman Publik (Tanpa Login)
 - **Landing Page (Beranda)**:
@@ -47,7 +47,7 @@ Sebagian besar pengguna aplikasi ini adalah kelompok **pra-manula dan manula den
   - Ditampilkan berdasarkan deteksi lokasi pengguna.
   - **UI/UX**: Menggunakan elemen Card (kartu) yang menarik, menampilkan sekilas profil sasana beserta tombol/tautan langsung ke Google Maps.
 - **Pencarian Lokasi Sasana**:
-  - Pengguna dapat mencari sasana menggunakan filter: **Propinsi**, **Kabupaten**, dan **Kecamatan**.
+  - Pengguna dapat mencari sasana menggunakan filter: **Propinsi**, **Kabupaten**, dan **Kecamatan**. Filter ini **wajib berupa *dropdown search* bertingkat (otomatis)** yang mengambil data langsung dari API wilayah secara dinamis.
   - **Hasil Pencarian**: Disajikan dalam format tabel yang jelas (mempertimbangkan ukuran font untuk usia 40-58 tahun), berisi Nama Sasana, Alamat Lengkap, dan Link/Tombol untuk mengecek lokasi via peta.
 
 ### D. Halaman Login & Registrasi

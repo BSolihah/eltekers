@@ -1,0 +1,7 @@
+buatkan saya isu frontend_sasana.md berisi:
+
+buatkan saya rancangan front end untuk aplikasi pengelolaan sasana ini dengan menerapkan hak akses
+menggunakan vue.js untuk frontend dan bootstrap untuk styling 
+tampilkan data menggunakan tabel dan formulir dengan validasi
+masing-masing role memiliki halaman yang berbeda
+
