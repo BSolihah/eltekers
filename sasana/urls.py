@@ -15,6 +15,7 @@ router.register(r'carousel', api_views.CarouselImageViewSet)
 urlpatterns = [
     # API endpoints
     path('api/', include(router.urls)),
+    path('api/proxy-wilayah/<path:endpoint>', api_views.proxy_wilayah, name='proxy_wilayah'),
     
     # Template Views
     path('', views.landing, name='landing'),

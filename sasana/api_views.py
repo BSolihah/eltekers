@@ -96,3 +96,17 @@ class KendalaKesehatanViewSet(viewsets.ModelViewSet):
 class CarouselImageViewSet(viewsets.ModelViewSet):
     queryset = CarouselImage.objects.all()
     serializer_class = CarouselImageSerializer
+
+import urllib.request
+import json
+from django.http import JsonResponse
+
+def proxy_wilayah(request, endpoint):
+    url = f"https://wilayah.id/api/{endpoint}"
+    try:
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode())
+            return JsonResponse(data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

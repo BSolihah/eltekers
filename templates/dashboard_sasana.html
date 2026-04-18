@@ -246,7 +246,7 @@
             },
             async fetchProvinces() {
                 try {
-                    const response = await fetch('https://wilayah.id/api/provinces.json');
+                    const response = await fetch('/api/proxy-wilayah/provinces.json');
                     const json = await response.json();
                     this.provinces = json.data;
                 } catch (error) { console.error('Error fetching provinces:', error); }
@@ -262,7 +262,7 @@
                 const selectedProv = this.provinces.find(p => p.name === this.sasana.propinsi);
                 if (selectedProv) {
                     try {
-                        const response = await fetch(`https://wilayah.id/api/regencies/${selectedProv.code}.json`);
+                        const response = await fetch(`/api/proxy-wilayah/regencies/${selectedProv.code}.json`);
                         const json = await response.json();
                         this.regencies = json.data;
                     } catch (error) { console.error('Error fetching regencies:', error); }
@@ -277,7 +277,7 @@
                 const selectedReg = this.regencies.find(r => r.name === this.sasana.kabupaten);
                 if (selectedReg) {
                     try {
-                        const response = await fetch(`https://wilayah.id/api/districts/${selectedReg.code}.json`);
+                        const response = await fetch(`/api/proxy-wilayah/districts/${selectedReg.code}.json`);
                         const json = await response.json();
                         this.districts = json.data;
                     } catch (error) { console.error('Error fetching districts:', error); }
