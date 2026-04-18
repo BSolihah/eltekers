@@ -1,0 +1,28 @@
+buatkan sasana.md berisi: 
+model: 
+admin_daerah(account, daerah)
+admin_sasana(account, sasana)
+sasana(nama, admin_sasana,propinsi, kabupaten, kecamatan, kelurahan_desa, map, profil)
+pengurus_sasana(account, sasana, jabatan,  no_hp)
+instruktur(account, sasana, no_hp, sertifikat, id_instruktur)
+peserta(account, sasana, no_hp, tanggal_lahir,nik,berat_badan,tinggi_badan)
+
+
+view:
+pendaftaran_sasana oleh admin_daerah, cukup mendaftarkan nama dan admin_sasana
+admin_daerah dapat melakukan edit frontend?
+edit_sasana oleh admin_sasana, cukup melengkapi atribut yang belum lengkap)
+
+pendaftaran_peserta, edit data peserta oleh admin_sasana, ada kolom pencarian peserta berdasarkan nik  
+pendaftaran_instruktur, edit data instruktur oleh admin_sasana  
+pendaftaran_pengurus_sasana, edit data pengurus_sasana oleh admin_sasana
+
+url: 
+/pendaftaran_sasana/
+/edit_sasana/
+/pendaftaran_peserta/
+/edit_peserta/
+/pendaftaran_instruktur/
+/edit_instruktur/
+/pendaftaran_pengurus_sasana/
+/edit_pengurus_sasana/

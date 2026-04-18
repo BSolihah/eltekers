@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin Sasana - Eltekers</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+        .card h3 { margin: 0; color: #666; font-size: 14px; text-transform: uppercase; }
+        .card p { font-size: 28px; font-weight: bold; margin: 10px 0 0; color: #1a73e8; }
+        .section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Dashboard Pengurus Sasana</h1>
+        
+        <div class="grid">
+            <div class="card">
+                <h3>Total Peserta</h3>
+                <p>[[ stats.total_peserta ]]</p>
+            </div>
+            <div class="card">
+                <h3>Total Instruktur</h3>
+                <p>[[ stats.total_instruktur ]]</p>
+            </div>
+            <div class="card">
+                <h3>Total Pengurus</h3>
+                <p>[[ stats.total_pengurus ]]</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Daftar Peserta Sasana</h2>
+            <input type="text" v-model="search" placeholder="Cari NIK atau Nama..." style="padding: 8px; width: 300px; margin-bottom: 10px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>NIK</th>
+                        <th>Nama</th>
+                        <th>No HP</th>
+                        <th>Kecamatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="p in filteredPeserta" :key="p.id">
+                        <td>[[ p.nik ]]</td>
+                        <td>[[ p.account.nama ]]</td>
+                        <td>[[ p.no_hp ]]</td>
+                        <td>[[ p.sasana.nama ]]</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            delimiters: ['[[', ']]'],
+            data() {
+                return {
+                    stats: {
+                        total_peserta: {{ stats.total_peserta }},
+                        total_instruktur: {{ stats.total_instruktur }},
+                        total_pengurus: {{ stats.total_pengurus }}
+                    },
+                    pesertaList: [],
+                    search: ''
+                }
+            },
+            computed: {
+                filteredPeserta() {
+                    return this.pesertaList.filter(p => {
+                        return p.nik.includes(this.search) || p.account.nama.toLowerCase().includes(this.search.toLowerCase())
+                    })
+                }
+            },
+            mounted() {
+                this.fetchPeserta();
+            },
+            methods: {
+                async fetchPeserta() {
+                    const response = await fetch('/api/peserta/');
+                    const data = await response.json();
+                    this.pesertaList = data;
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
