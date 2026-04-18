@@ -149,8 +149,13 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label fw-bold">Profil/Deskripsi Singkat</label>
-                    <textarea class="form-control" v-model="sasana.profil" rows="4"></textarea>
+                    <label class="form-label fw-bold">Foto Profil Sasana (Gambar)</label>
+                    <div v-if="sasana.profil && typeof sasana.profil === 'string'" class="mb-2">
+                        <img :src="sasana.profil" class="img-thumbnail" style="max-height: 200px;">
+                        <p class="small text-muted">Gambar saat ini</p>
+                    </div>
+                    <input type="file" class="form-control" @change="handleProfileUpload" accept="image/*">
+                    <small class="text-muted">Pilih file gambar baru untuk mengganti foto profil.</small>
                 </div>
 
                 <button type="submit" class="btn btn-primary" :disabled="saving">
@@ -184,7 +189,8 @@
                 districts: [],
                 saving: false,
                 updateSuccess: false,
-                initialLoad: true
+                initialLoad: true,
+                selectedFile: null
             }
         },
         computed: {
@@ -283,20 +289,36 @@
                     } catch (error) { console.error('Error fetching districts:', error); }
                 }
             },
+            handleProfileUpload(event) {
+                this.selectedFile = event.target.files[0];
+            },
             async updateSasana() {
                 this.saving = true;
                 this.updateSuccess = false;
+
+                const formData = new FormData();
+                formData.append('nama', this.sasana.nama);
+                formData.append('propinsi', this.sasana.propinsi);
+                formData.append('kabupaten', this.sasana.kabupaten);
+                formData.append('kecamatan', this.sasana.kecamatan);
+                formData.append('kelurahan_desa', this.sasana.kelurahan_desa);
+                formData.append('map', this.sasana.map);
+                
+                if (this.selectedFile) {
+                    formData.append('profil', this.selectedFile);
+                }
+
                 try {
                     const response = await fetch(`/api/sasana/${this.sasana.id}/`, {
                         method: 'PATCH',
                         headers: {
-                            'Content-Type': 'application/json',
                             'X-CSRFToken': this.getCookie('csrftoken')
                         },
-                        body: JSON.stringify(this.sasana)
+                        body: formData
                     });
                     if (response.ok) {
                         this.updateSuccess = true;
+                        this.fetchAdminSasanaData(); // Refresh data
                     }
                 } catch (error) { console.error(error); }
                 finally { this.saving = false; }

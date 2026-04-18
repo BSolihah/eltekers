@@ -60,12 +60,16 @@
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             <div class="col" v-for="sasana in nearestSasana" :key="sasana.id">
                 <div class="card h-100 border-primary shadow-sm">
+                    <img v-if="sasana.profil" :src="sasana.profil" class="card-img-top" :alt="sasana.nama" style="height: 180px; object-fit: cover;">
+                    <div v-else class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                        <i class="bi bi-image text-muted fs-1"></i>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title text-primary">[[ sasana.nama ]]</h5>
-                        <p class="card-text text-muted mb-2">
+                        <h5 class="card-title text-primary fw-bold">[[ sasana.nama ]]</h5>
+                        <p class="card-text text-muted mb-2 small">
                             <i class="bi bi-geo-alt me-1"></i> [[ sasana.kecamatan ]], [[ sasana.kabupaten ]]
                         </p>
-                        <p class="card-text small">[[ sasana.profil ]]</p>
+                        <p class="card-text">[[ sasana.nama ]]</p>
                     </div>
                     <div class="card-footer bg-white border-top-0">
                         <a :href="'https://www.google.com/maps/search/?api=1&query=' + sasana.map" target="_blank" class="btn btn-outline-primary btn-sm w-100">

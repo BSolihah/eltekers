@@ -23,7 +23,7 @@ class Sasana(models.Model):
     kecamatan = models.CharField(max_length=100)
     kelurahan_desa = models.CharField(max_length=100)
     map = models.CharField(max_length=255, help_text="Koordinat Google Maps")
-    profil = models.TextField(blank=True)
+    profil = models.ImageField(upload_to='sasana_profiles/', null=True, blank=True)
 
     def __str__(self):
         return self.nama
