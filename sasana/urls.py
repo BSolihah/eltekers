@@ -10,6 +10,7 @@ router.register(r'instruktur', api_views.InstrukturViewSet)
 router.register(r'pengurus-sasana', api_views.PengurusSasanaViewSet)
 router.register(r'keterbatasan-fisik', api_views.KeterbatasanFisikViewSet)
 router.register(r'kendala-kesehatan', api_views.KendalaKesehatanViewSet)
+router.register(r'carousel', api_views.CarouselImageViewSet)
 
 urlpatterns = [
     # API endpoints

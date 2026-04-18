@@ -2,13 +2,14 @@ from rest_framework import viewsets, filters
 from .models import (
     Account, Sasana, AdminDaerah, AdminSasana, 
     PengurusSasana, Instruktur, Peserta, 
-    KeterbatasanFisik, KendalaKesehatan
+    KeterbatasanFisik, KendalaKesehatan, CarouselImage
 )
 from .serializers import (
     AccountSerializer, SasanaSerializer, AdminDaerahSerializer, 
     AdminSasanaSerializer, PengurusSasanaSerializer, 
     InstrukturSerializer, PesertaSerializer,
-    KeterbatasanFisikSerializer, KendalaKesehatanSerializer
+    KeterbatasanFisikSerializer, KendalaKesehatanSerializer,
+    CarouselImageSerializer
 )
 
 class AccountViewSet(viewsets.ModelViewSet):
@@ -91,3 +92,7 @@ class KeterbatasanFisikViewSet(viewsets.ModelViewSet):
 class KendalaKesehatanViewSet(viewsets.ModelViewSet):
     queryset = KendalaKesehatan.objects.all()
     serializer_class = KendalaKesehatanSerializer
+
+class CarouselImageViewSet(viewsets.ModelViewSet):
+    queryset = CarouselImage.objects.all()
+    serializer_class = CarouselImageSerializer

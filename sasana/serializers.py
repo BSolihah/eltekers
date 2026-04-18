@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     Account, Sasana, AdminDaerah, AdminSasana, 
     PengurusSasana, Instruktur, Peserta, 
-    KeterbatasanFisik, KendalaKesehatan
+    KeterbatasanFisik, KendalaKesehatan, CarouselImage
 )
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -61,4 +61,9 @@ class PesertaSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Peserta
+        fields = '__all__'
+
+class CarouselImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CarouselImage
         fields = '__all__'

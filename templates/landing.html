@@ -6,33 +6,40 @@
 <div id="landing-app" v-cloak>
 
     <!-- Hero Section / Carousel -->
-    <div id="heroCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    <div id="heroCarousel" class="carousel slide mb-5" data-bs-ride="carousel" v-if="carouselImages.length > 0">
         <div class="carousel-inner rounded shadow">
-            <div class="carousel-item active">
-                <div class="d-block w-100 bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 400px;">
-                    <div class="text-center">
-                        <h2>Terapi Ling Tien Kung</h2>
-                        <p class="lead">Kesehatan Tanpa Obat, Tanpa Alat, Tanpa Ongkos</p>
-                    </div>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <div class="d-block w-100 bg-dark text-white d-flex align-items-center justify-content-center" style="height: 400px;">
-                    <div class="text-center">
-                        <h2>Bersama Kita Sehat</h2>
-                        <p class="lead">Mari bergabung bersama ribuan peserta lainnya di seluruh Indonesia.</p>
+            <div v-for="(item, index) in carouselImages" :key="item.id" :class="['carousel-item', { active: index === 0 }]">
+                <div class="position-relative" style="height: 500px; background-color: #000;">
+                    <img :src="item.image" class="d-block w-100 h-100" style="object-fit: cover; opacity: 0.8;" :alt="item.title">
+                    <div class="carousel-caption d-block w-100 start-0 bottom-0 p-4" style="background: rgba(0,0,0,0.6); text-align: left;">
+                        <h2 class="fw-bold">[[ item.title ]]</h2>
+                        <p class="lead mb-0">[[ item.description ]]</p>
                     </div>
                 </div>
             </div>
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <button v-if="carouselImages.length > 1" class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Previous</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <button v-if="carouselImages.length > 1" class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Next</span>
         </button>
+    </div>
+
+    <!-- Default Carousel if Empty -->
+    <div id="heroCarouselDefault" class="carousel slide mb-5" data-bs-ride="carousel" v-else>
+        <div class="carousel-inner rounded shadow">
+            <div class="carousel-item active">
+                <div class="d-block w-100 bg-secondary text-white d-flex align-items-end justify-content-start" style="height: 400px; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.7)), #6c757d;">
+                    <div class="text-start">
+                        <h2 class="fw-bold">Selamat Datang di Eltekers</h2>
+                        <p class="lead">Komunitas Terapi Ling Tien Kung.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="row mb-5">
@@ -144,10 +151,23 @@
                     kecamatan: ''
                 },
                 searchResults: [],
-                hasSearched: false
+                hasSearched: false,
+                carouselImages: []
             }
         },
+        mounted() {
+            this.fetchCarousel();
+        },
         methods: {
+            async fetchCarousel() {
+                try {
+                    const response = await fetch('/api/carousel/?is_active=true');
+                    const data = await response.json();
+                    this.carouselImages = data;
+                } catch (error) {
+                    console.error('Error fetching carousel:', error);
+                }
+            },
             getLocation() {
                 this.locationError = '';
                 this.nearestSasana = [];

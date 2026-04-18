@@ -24,11 +24,12 @@ Sebagian besar pengguna aplikasi ini adalah kelompok **pra-manula dan manula den
 ## 3. Desain Halaman per Role
 
 ### A. Dashboard Admin Daerah
-- **Sidebar**: Link ke "Statistik Wilayah", "Daftar Sasana", dan "Registrasi Sasana Baru".
+- **Sidebar**: Link ke "Statistik Wilayah", "Daftar Sasana", "Registrasi Sasana Baru", dan "Manajemen Slidebar".
 - **Main Content**:
   - **Statistik**: Card Bootstrap berisi jumlah sasana, peserta, dll.
   - **Tabel Sasana**: Menampilkan daftar sasana dengan fitur filter dan tombol edit.
   - **Form Registrasi**: Modal atau halaman terpisah untuk mendaftarkan sasana baru. Form ini **wajib** mencakup pembuatan akun untuk **Admin Sasana** secara bersamaan saat sasana baru didaftarkan, beserta validasi field wajib lainnya.
+  - **Manajemen Slidebar**: Antarmuka untuk mengunggah dan mengelola gambar/foto pada slide bar (carousel) halaman utama, termasuk pengaturan teks pendamping.
 
 ### B. Dashboard Admin Sasana
 - **Sidebar**: Link ke "Data Peserta", "Data Instruktur", "Data Pengurus", dan "Profil Sasana".
@@ -40,7 +41,7 @@ Sebagian besar pengguna aplikasi ini adalah kelompok **pra-manula dan manula den
 
 ### C. Halaman Publik (Tanpa Login)
 - **Landing Page (Beranda)**:
-  - **Hero Section**: Memuat *Carousel* (slider/slidebar) foto dokumentasi kegiatan terapi Ling Tien Kung untuk memperkenalkan aktivitas sasana secara visual.
+  - **Hero Section**: Memuat *Carousel* (slider/slidebar) foto dokumentasi kegiatan terapi Ling Tien Kung untuk memperkenalkan aktivitas sasana secara visual. Tata letak (layout) dirancang secara spesifik dengan gambar yang mendominasi dan **teks keterangan diletakkan secara jelas di sisi bawah** bersama gambar tersebut.
   - **Call to Action**: Terdapat tautan/tombol cepat menuju pencarian sasana terdekat atau halaman pendaftaran.
 - **Menu Utama**: Daftar 10 Sasana Terdekat.
   - Ditampilkan berdasarkan deteksi lokasi pengguna.

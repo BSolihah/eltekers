@@ -80,3 +80,16 @@ class KeterbatasanFisik(models.Model):
 class KendalaKesehatan(models.Model):
     peserta = models.ForeignKey(Peserta, on_delete=models.CASCADE, related_name='kendala')
     jenis_penyakit = models.CharField(max_length=255)
+
+class CarouselImage(models.Model):
+    image = models.ImageField(upload_to='carousel/')
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.title

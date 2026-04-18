@@ -9,44 +9,37 @@
         <span class="badge bg-primary fs-6">{{ request.user.admindaerah.daerah }}</span>
     </div>
     
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4 mb-5">
-        <div class="col">
-            <div class="card h-100 border-start border-primary border-4 shadow-sm">
+    <!-- Statistik Cards -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4 mb-4">
+        <!-- ... (Statistik tetap sama) ... -->
+        <div class="col" v-for="(val, key) in statsLabel" :key="key">
+            <div :class="['card h-100 border-start border-4 shadow-sm', statsLabel[key].color]">
                 <div class="card-body">
-                    <div class="text-muted text-uppercase fw-bold small mb-2">Total Sasana</div>
-                    <div class="h3 mb-0 text-primary">[[ stats.total_sasana ]]</div>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card h-100 border-start border-success border-4 shadow-sm">
-                <div class="card-body">
-                    <div class="text-muted text-uppercase fw-bold small mb-2">Total Peserta</div>
-                    <div class="h3 mb-0 text-success">[[ stats.total_peserta ]]</div>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card h-100 border-start border-warning border-4 shadow-sm">
-                <div class="card-body">
-                    <div class="text-muted text-uppercase fw-bold small mb-2">Total Instruktur</div>
-                    <div class="h3 mb-0 text-warning">[[ stats.total_instruktur ]]</div>
-                </div>
-            </div>
-        </div>
-        <div class="col">
-            <div class="card h-100 border-start border-info border-4 shadow-sm">
-                <div class="card-body">
-                    <div class="text-muted text-uppercase fw-bold small mb-2">Pengurus Sasana</div>
-                    <div class="h3 mb-0 text-info">[[ stats.total_pengurus ]]</div>
+                    <div class="text-muted text-uppercase fw-bold small mb-2">[[ statsLabel[key].label ]]</div>
+                    <div :class="['h3 mb-0', statsLabel[key].textColor]">[[ stats[key] ]]</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
+    <!-- Navigasi Tab -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm">
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'sasana' }]" @click="activeTab = 'sasana'">
+                <i class="bi bi-buildings me-2"></i>Daftar Sasana
+            </button>
+        </li>
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'carousel' }]" @click="activeTab = 'carousel'">
+                <i class="bi bi-images me-2"></i>Manajemen Slidebar
+            </button>
+        </li>
+    </ul>
+
+    <!-- Section Daftar Sasana -->
+    <div v-if="activeTab === 'sasana'" class="card shadow-sm mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-            <h4 class="mb-0"><i class="bi bi-buildings me-2"></i>Daftar Sasana Wilayah</h4>
+            <h4 class="mb-0">Daftar Sasana Wilayah</h4>
             <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Registrasi Sasana Baru</button>
         </div>
         <div class="card-body">
@@ -79,6 +72,91 @@
             </div>
         </div>
     </div>
+
+    <!-- Section Manajemen Carousel -->
+    <div v-if="activeTab === 'carousel'" class="row g-4">
+        <!-- Form Upload -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Tambah Slide Baru</h5>
+                </div>
+                <div class="card-body">
+                    <form @submit.prevent="uploadCarousel">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Pilih Gambar</label>
+                            <input type="file" class="form-control" ref="fileInput" accept="image/*" required @change="handleFileChange">
+                            <small class="text-muted">Gunakan gambar landscape (saran: 1200x500px)</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Judul Slide</label>
+                            <input type="text" class="form-control" v-model="newCarousel.title" placeholder="Contoh: Terapi Bersama" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Deskripsi (Muncul di bawah judul)</label>
+                            <textarea class="form-control" v-model="newCarousel.description" rows="3" placeholder="Penjelasan singkat..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Urutan</label>
+                            <input type="number" class="form-control" v-model="newCarousel.order">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" :disabled="uploading">
+                            <span v-if="uploading" class="spinner-border spinner-border-sm me-2"></span>
+                            Simpan Slide
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daftar Slide -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Daftar Slide Aktif</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th width="120">Gambar</th>
+                                    <th>Info Slide</th>
+                                    <th width="100">Status</th>
+                                    <th width="100">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in carouselList" :key="item.id">
+                                    <td>
+                                        <img :src="item.image" class="img-thumbnail" style="width: 100px; height: 60px; object-fit: cover;">
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">[[ item.title ]]</div>
+                                        <small class="text-muted text-truncate d-block" style="max-width: 300px;">[[ item.description ]]</small>
+                                        <small class="badge bg-secondary">Urutan: [[ item.order ]]</small>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" v-model="item.is_active" @change="toggleCarousel(item)">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" @click="deleteCarousel(item.id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="carouselList.length === 0">
+                                    <td colspan="4" class="text-center py-4 text-muted">Belum ada slide yang diunggah.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -89,27 +167,108 @@
         delimiters: ['[[', ']]'],
         data() {
             return {
+                activeTab: 'sasana',
                 stats: {
                     total_sasana: {{ stats.total_sasana }},
                     total_peserta: {{ stats.total_peserta }},
                     total_instruktur: {{ stats.total_instruktur }},
                     total_pengurus: {{ stats.total_pengurus }}
                 },
-                sasanaList: []
+                statsLabel: {
+                    total_sasana: { label: 'Total Sasana', color: 'border-primary', textColor: 'text-primary' },
+                    total_peserta: { label: 'Total Peserta', color: 'border-success', textColor: 'text-success' },
+                    total_instruktur: { label: 'Total Instruktur', color: 'border-warning', textColor: 'text-warning' },
+                    total_pengurus: { label: 'Pengurus Sasana', color: 'border-info', textColor: 'text-info' },
+                },
+                sasanaList: [],
+                carouselList: [],
+                newCarousel: {
+                    title: '',
+                    description: '',
+                    order: 0,
+                    image: null
+                },
+                uploading: false
             }
         },
         mounted() {
             this.fetchSasana();
+            this.fetchCarousel();
         },
         methods: {
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            },
             async fetchSasana() {
                 try {
                     const response = await fetch('/api/sasana/');
-                    const data = await response.json();
-                    this.sasanaList = data;
-                } catch (error) {
-                    console.error("Error fetching sasana:", error);
-                }
+                    this.sasanaList = await response.json();
+                } catch (error) { console.error(error); }
+            },
+            async fetchCarousel() {
+                try {
+                    const response = await fetch('/api/carousel/');
+                    this.carouselList = await response.json();
+                } catch (error) { console.error(error); }
+            },
+            handleFileChange(event) {
+                this.newCarousel.image = event.target.files[0];
+            },
+            async uploadCarousel() {
+                this.uploading = true;
+                const formData = new FormData();
+                formData.append('title', this.newCarousel.title);
+                formData.append('description', this.newCarousel.description);
+                formData.append('order', this.newCarousel.order);
+                formData.append('image', this.newCarousel.image);
+                formData.append('is_active', true);
+
+                try {
+                    const response = await fetch('/api/carousel/', {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': this.getCookie('csrftoken') },
+                        body: formData
+                    });
+                    if (response.ok) {
+                        this.newCarousel = { title: '', description: '', order: 0, image: null };
+                        this.$refs.fileInput.value = '';
+                        this.fetchCarousel();
+                    }
+                } catch (error) { console.error(error); }
+                finally { this.uploading = false; }
+            },
+            async toggleCarousel(item) {
+                try {
+                    await fetch(`/api/carousel/${item.id}/`, {
+                        method: 'PATCH',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCookie('csrftoken') 
+                        },
+                        body: JSON.stringify({ is_active: item.is_active })
+                    });
+                } catch (error) { console.error(error); }
+            },
+            async deleteCarousel(id) {
+                if(!confirm('Hapus slide ini?')) return;
+                try {
+                    await fetch(`/api/carousel/${id}/`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                    });
+                    this.fetchCarousel();
+                } catch (error) { console.error(error); }
             }
         }
     }).mount('#app')
