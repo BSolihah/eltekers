@@ -15,8 +15,11 @@ urlpatterns = [
     # API endpoints
     path('api/', include(router.urls)),
     
-    # Template Views (Dashboard)
+    # Template Views
+    path('', views.landing, name='landing'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('register/', views.register_view, name='register'),
     path('dashboard/daerah/', views.dashboard_daerah, name='dashboard_daerah'),
     path('dashboard/sasana/', views.dashboard_sasana, name='dashboard_sasana'),
-    path('', views.index, name='index'),
 ]
