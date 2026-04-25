@@ -129,7 +129,7 @@ class SasanaViewSet(viewsets.ModelViewSet):
         return Response(nearest_sasanas)
 
 class PesertaViewSet(viewsets.ModelViewSet):
-    queryset = Peserta.objects.all()
+    queryset = Peserta.objects.select_related('account', 'sasana').all()
     serializer_class = PesertaSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['nik', 'account__nama']
@@ -153,7 +153,7 @@ class PesertaViewSet(viewsets.ModelViewSet):
             serializer.save()
 
 class InstrukturViewSet(viewsets.ModelViewSet):
-    queryset = Instruktur.objects.all()
+    queryset = Instruktur.objects.select_related('account', 'sasana').all()
     serializer_class = InstrukturSerializer
 
     def perform_create(self, serializer):
@@ -175,7 +175,7 @@ class InstrukturViewSet(viewsets.ModelViewSet):
             serializer.save()
 
 class PengurusSasanaViewSet(viewsets.ModelViewSet):
-    queryset = PengurusSasana.objects.all()
+    queryset = PengurusSasana.objects.select_related('account', 'sasana').all()
     serializer_class = PengurusSasanaSerializer
 
     def perform_create(self, serializer):
@@ -216,11 +216,12 @@ import requests
 from django.http import JsonResponse
 
 def proxy_wilayah(request, endpoint):
-    # Coba sumber utama (emsifa) jika memungkinkan, atau tetap gunakan wilayah.id
-    # Kita akan mencoba memetakan endpoint wilayah.id ke emsifa
-    # wilayah.id: provinces.json, regencies/{id}.json, districts/{id}.json, villages/{id}.json
-    # emsifa: provinces.json, regencies/{id}.json, districts/{id}.json, villages/{id}.json (sama)
-    
+    from django.core.cache import cache
+    cache_key = f'proxy_wilayah_{endpoint.replace("/", "_")}'
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return JsonResponse(cached_data, safe=False)
+
     primary_url = f"https://www.emsifa.com/api-wilayah-indonesia/api/{endpoint}"
     fallback_url = f"https://wilayah.id/api/{endpoint}"
     
@@ -237,7 +238,6 @@ def proxy_wilayah(request, endpoint):
             data = response.json()
 
         # Normalisasi struktur respons
-        # 1. Pastikan dalam bentuk {"data": [...]}
         if isinstance(data, list):
             raw_list = data
         elif isinstance(data, dict) and "data" in data:
@@ -245,8 +245,6 @@ def proxy_wilayah(request, endpoint):
         else:
             raw_list = [data] if data else []
 
-        # 2. Pastikan setiap item punya 'code' dan 'name'
-        # emsifa sering pakai 'id', wilayah.id pakai 'code'
         normalized_data = []
         for item in raw_list:
             if not isinstance(item, dict): continue
@@ -255,7 +253,9 @@ def proxy_wilayah(request, endpoint):
             if code and name:
                 normalized_data.append({'code': code, 'name': name})
         
-        return JsonResponse({'data': normalized_data}, safe=False)
+        result = {'data': normalized_data}
+        cache.set(cache_key, result, 86400) # Cache selama 24 jam karena data wilayah sangat jarang berubah
+        return JsonResponse(result, safe=False)
         
     except Exception as e:
         print(f"Proxy Final Error: {str(e)}")

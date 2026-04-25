@@ -136,3 +136,21 @@ AUTH_USER_MODEL = 'sasana.Account'
 # Media files (Uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Cache & Redis configuration
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
+            "IGNORE_EXCEPTIONS": True, # Tetap jalan meski Redis down (fail-silently)
+        },
+        "KEY_PREFIX": "eis_bogor"
+    }
+}
+
+# Use Redis for Sessions (Performance optimization)
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
