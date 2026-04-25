@@ -15,6 +15,9 @@ def login_view(request):
         user = authenticate(request, username=u, password=p)
         if user is not None:
             login(request, user)
+            if getattr(user, 'force_password_change', False):
+                return redirect('change_password')
+            
             if user.role == 'ADMIN_DAERAH':
                 return redirect('dashboard_daerah')
             elif user.role == 'ADMIN_SASANA':
@@ -25,6 +28,35 @@ def login_view(request):
             from django.contrib import messages
             messages.error(request, "Username atau password salah.")
     return render(request, 'login.html')
+
+@login_required
+def change_password_view(request):
+    if request.method == 'POST':
+        p1 = request.POST.get('new_password')
+        p2 = request.POST.get('confirm_password')
+        from django.contrib import messages
+        if not p1 or not p2:
+            messages.error(request, "Password tidak boleh kosong.")
+        elif p1 != p2:
+            messages.error(request, "Password dan Konfirmasi Password tidak cocok.")
+        else:
+            user = request.user
+            user.set_password(p1)
+            user.force_password_change = False
+            user.save()
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, user)
+            messages.success(request, "Password berhasil diubah. Selamat datang!")
+            if user.role == 'ADMIN_DAERAH':
+                return redirect('dashboard_daerah')
+            elif user.role == 'ADMIN_SASANA':
+                return redirect('dashboard_sasana')
+            else:
+                return redirect('landing')
+    return render(request, 'change_password.html')
+
+def forgot_password_view(request):
+    return render(request, 'forgot_password.html')
 
 def register_view(request):
     if request.method == 'POST':
@@ -82,10 +114,24 @@ def dashboard_daerah(request):
 def dashboard_sasana(request):
     if request.user.role != 'ADMIN_SASANA':
         return redirect('landing')
-    # Default stats (ideally filtered by admin_sasana)
+    
+    # Ambil sasana yang dikelola admin ini
+    try:
+        sasana = request.user.adminsasana.sasana
+    except Exception:
+        # Jika profil admin sasana belum lengkap
+        return render(request, 'dashboard_sasana.html', {
+            'stats': {'total_peserta': 0, 'total_instruktur': 0, 'total_pengurus': 0},
+            'error': 'Profil Admin Sasana belum terhubung dengan Sasana manapun.'
+        })
+
     stats = {
-        'total_peserta': Peserta.objects.count(),
-        'total_instruktur': Instruktur.objects.count(),
-        'total_pengurus': PengurusSasana.objects.count(),
+        'total_peserta': Peserta.objects.filter(sasana=sasana).count(),
+        'total_instruktur': Instruktur.objects.filter(sasana=sasana).count(),
+        'total_pengurus': PengurusSasana.objects.filter(sasana=sasana).count(),
     }
-    return render(request, 'dashboard_sasana.html', {'stats': stats})
+
+    return render(request, 'dashboard_sasana.html', {
+        'stats': stats,
+        'sasana': sasana
+    })

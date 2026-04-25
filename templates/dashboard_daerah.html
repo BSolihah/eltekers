@@ -8,15 +8,15 @@
         <h1 class="h2"><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard Pengurus Daerah</h1>
         <span class="badge bg-primary fs-6">{{ request.user.admindaerah.daerah }}</span>
     </div>
-    
+
     <!-- Statistik Cards -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4 mb-4">
         <!-- ... (Statistik tetap sama) ... -->
         <div class="col" v-for="(val, key) in statsLabel" :key="key">
             <div :class="['card h-100 border-start border-4 shadow-sm', statsLabel[key].color]">
                 <div class="card-body">
-                    <div class="text-muted text-uppercase fw-bold small mb-2">[[ statsLabel[key].label ]]</div>
-                    <div :class="['h3 mb-0', statsLabel[key].textColor]">[[ stats[key] ]]</div>
+                    <div class="text-muted text-uppercase fw-bold small mb-2" v-text="statsLabel[key].label"></div>
+                    <div :class="['h3 mb-0', statsLabel[key].textColor]" v-text="stats[key]"></div>
                 </div>
             </div>
         </div>
@@ -40,7 +40,8 @@
     <div v-if="activeTab === 'sasana'" class="card shadow-sm mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
             <h4 class="mb-0">Daftar Sasana Wilayah</h4>
-            <button class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Registrasi Sasana Baru</button>
+            <button class="btn btn-primary btn-sm" @click="openSasanaModal()"><i
+                    class="bi bi-plus-lg me-1"></i>Registrasi Sasana Baru</button>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -48,6 +49,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Nama Sasana</th>
+                            <th>Username Admin</th>
                             <th>Provinsi</th>
                             <th>Kabupaten</th>
                             <th>Kecamatan</th>
@@ -56,16 +58,21 @@
                     </thead>
                     <tbody>
                         <tr v-for="s in sasanaList" :key="s.id">
-                            <td class="fw-bold">[[ s.nama ]]</td>
-                            <td>[[ s.propinsi ]]</td>
-                            <td>[[ s.kabupaten ]]</td>
-                            <td>[[ s.kecamatan ]]</td>
+                            <td class="fw-bold" v-text="s.nama"></td>
+                            <td><span class="badge bg-info text-dark" v-text="s.admin_username"></span></td>
+                            <td v-text="s.propinsi"></td>
+                            <td v-text="s.kabupaten"></td>
+                            <td v-text="s.kecamatan"></td>
                             <td>
-                                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square"></i></button>
+                                <button class="btn btn-sm btn-outline-primary" @click="openSasanaModal(s)" title="Edit Sasana"><i
+                                        class="bi bi-pencil-square"></i></button>
+                                <button class="btn btn-sm btn-outline-warning mx-1" @click="resetPassword(s)" title="Reset Password Default"><i class="bi bi-key"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteSasana(s.id)" title="Hapus"><i
+                                        class="bi bi-trash"></i></button>
                             </td>
                         </tr>
                         <tr v-if="sasanaList.length === 0">
-                            <td colspan="5" class="text-center py-3 text-muted">Belum ada data sasana.</td>
+                            <td colspan="6" class="text-center py-3 text-muted">Belum ada data sasana.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -85,16 +92,19 @@
                     <form @submit.prevent="uploadCarousel">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Pilih Gambar</label>
-                            <input type="file" class="form-control" ref="fileInput" accept="image/*" required @change="handleFileChange">
+                            <input type="file" class="form-control" ref="fileInput" accept="image/*" required
+                                @change="handleFileChange">
                             <small class="text-muted">Gunakan gambar landscape (saran: 1200x500px)</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Judul Slide</label>
-                            <input type="text" class="form-control" v-model="newCarousel.title" placeholder="Contoh: Terapi Bersama" required>
+                            <input type="text" class="form-control" v-model="newCarousel.title"
+                                placeholder="Contoh: Terapi Bersama" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Deskripsi (Muncul di bawah judul)</label>
-                            <textarea class="form-control" v-model="newCarousel.description" rows="3" placeholder="Penjelasan singkat..."></textarea>
+                            <textarea class="form-control" v-model="newCarousel.description" rows="3"
+                                placeholder="Penjelasan singkat..."></textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Urutan</label>
@@ -129,16 +139,20 @@
                             <tbody>
                                 <tr v-for="item in carouselList" :key="item.id">
                                     <td>
-                                        <img :src="item.image" class="img-thumbnail" style="width: 100px; height: 60px; object-fit: cover;">
+                                        <img :src="item.image" class="img-thumbnail"
+                                            style="width: 100px; height: 60px; object-fit: cover;">
                                     </td>
                                     <td>
-                                        <div class="fw-bold">[[ item.title ]]</div>
-                                        <small class="text-muted text-truncate d-block" style="max-width: 300px;">[[ item.description ]]</small>
-                                        <small class="badge bg-secondary">Urutan: [[ item.order ]]</small>
+                                        <div class="fw-bold" v-text="item.title"></div>
+                                        <small class="text-muted text-truncate d-block" style="max-width: 300px;"
+                                            v-text="item.description"></small>
+                                        <small class="badge bg-secondary">Urutan: <span
+                                                v-text="item.order"></span></small>
                                     </td>
                                     <td>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" v-model="item.is_active" @change="toggleCarousel(item)">
+                                            <input class="form-check-input" type="checkbox" v-model="item.is_active"
+                                                @change="toggleCarousel(item)">
                                         </div>
                                     </td>
                                     <td>
@@ -148,7 +162,8 @@
                                     </td>
                                 </tr>
                                 <tr v-if="carouselList.length === 0">
-                                    <td colspan="4" class="text-center py-4 text-muted">Belum ada slide yang diunggah.</td>
+                                    <td colspan="4" class="text-center py-4 text-muted">Belum ada slide yang diunggah.
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -156,7 +171,122 @@
                 </div>
             </div>
         </div>
+        </div>
+
+<div class="modal fade" id="sasanaModal" tabindex="-1" aria-labelledby="sasanaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="sasanaModalLabel"
+                    v-text="isEdit ? 'Edit Sasana' : 'Registrasi Sasana Baru'">
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div v-if="formError" class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>[[ formError ]]
+                </div>
+                <form @submit.prevent="saveSasana">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nama Sasana</label>
+                        <input type="text" class="form-control" v-model="sasanaForm.nama" required>
+                    </div>
+
+                    <!-- Blok Pembuatan Akun Admin Sasana (Hanya saat registrasi baru) -->
+                    <div v-if="!isEdit" class="card border-primary mb-3">
+                        <div class="card-header bg-primary text-white py-2">
+                            <h6 class="mb-0"><i class="bi bi-person-badge me-2"></i>Buat Akun Admin Sasana</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12 mb-2">
+                                    <label class="form-label small fw-bold">Username</label>
+                                    <input type="text" class="form-control form-control-sm" v-model="sasanaForm.admin_username" :required="!isEdit">
+                                    <small class="text-muted">Password awal akan otomatis dibuat: <b>sasana123</b></small>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-bold">Nama Lengkap Admin</label>
+                                    <input type="text" class="form-control form-control-sm" v-model="sasanaForm.admin_nama" :required="!isEdit">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-bold">Email</label>
+                                    <input type="email" class="form-control form-control-sm" v-model="sasanaForm.admin_email">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Propinsi</label>
+                            <select class="form-select" v-model="sasanaForm.propinsi" @change="fetchRegencies(true)"
+                                required>
+                                <option value="">-- Pilih Propinsi --</option>
+                                <option v-for="prov in provinces" :key="prov.code" :value="prov.name" v-text="prov.name"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Kabupaten/Kota</label>
+                            <select class="form-select" v-model="sasanaForm.kabupaten" @change="fetchDistricts(true)"
+                                :disabled="!sasanaForm.propinsi" required>
+                                <option value="">-- Pilih Kabupaten --</option>
+                                <option v-for="reg in regencies" :key="reg.code" :value="reg.name" v-text="reg.name"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Kecamatan</label>
+                            <select class="form-select" v-model="sasanaForm.kecamatan" @change="fetchVillages(true)"
+                                :disabled="!sasanaForm.kabupaten" required>
+                                <option value="">-- Pilih Kecamatan --</option>
+                                <option v-for="dist in districts" :key="dist.code" :value="dist.name" v-text="dist.name"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Desa/Kelurahan</label>
+                        <select class="form-select" v-model="sasanaForm.kelurahan_desa"
+                            :disabled="!sasanaForm.kecamatan" required>
+                            <option value="">-- Pilih Desa/Kelurahan --</option>
+                            <option v-for="vil in villages" :key="vil.code" :value="vil.name" v-text="vil.name"></option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Alamat Lengkap</label>
+                        <textarea class="form-control" v-model="sasanaForm.alamat" rows="2"
+                            placeholder="Jalan, No. Rumah, RT/RW..."></textarea>
+                    </div>
+
+                    <div class="mb-3" v-if="isEdit">
+                        <label class="form-label fw-bold">Koordinat Map</label>
+                        <input type="text" class="form-control" v-model="sasanaForm.map"
+                            placeholder="Contoh: -6.6000, 106.8000">
+                    </div>
+
+                    <div class="mb-3" v-if="isEdit">
+                        <label class="form-label fw-bold">Foto Profil Sasana</label>
+                        <div v-if="sasanaForm.profil && typeof sasanaForm.profil === 'string'" class="mb-2">
+                            <img :src="sasanaForm.profil" class="img-thumbnail" style="max-height: 100px;">
+                        </div>
+                        <input type="file" class="form-control" @change="handleSasanaFileUpload" accept="image/*">
+                    </div>
+
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" :disabled="savingSasana">
+                            <span v-if="savingSasana" class="spinner-border spinner-border-sm me-2"></span>
+                            <span v-text="isEdit ? 'Simpan Perubahan' : 'Registrasi Sasana'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
@@ -169,108 +299,307 @@
             return {
                 activeTab: 'sasana',
                 stats: {
-                    total_sasana: {{ stats.total_sasana }},
-                    total_peserta: {{ stats.total_peserta }},
-                    total_instruktur: {{ stats.total_instruktur }},
-                    total_pengurus: {{ stats.total_pengurus }}
+                    total_sasana: {{ stats.total_sasana|default:"0" }},
+                    total_peserta: {{ stats.total_peserta|default:"0" }},
+                    total_instruktur: {{ stats.total_instruktur|default:"0" }},
+                    total_pengurus: {{ stats.total_pengurus|default:"0" }}
                 },
-                statsLabel: {
-                    total_sasana: { label: 'Total Sasana', color: 'border-primary', textColor: 'text-primary' },
-                    total_peserta: { label: 'Total Peserta', color: 'border-success', textColor: 'text-success' },
-                    total_instruktur: { label: 'Total Instruktur', color: 'border-warning', textColor: 'text-warning' },
-                    total_pengurus: { label: 'Pengurus Sasana', color: 'border-info', textColor: 'text-info' },
-                },
-                sasanaList: [],
-                carouselList: [],
-                newCarousel: {
-                    title: '',
-                    description: '',
-                    order: 0,
-                    image: null
-                },
-                uploading: false
+        statsLabel: {
+        total_sasana: { label: 'Total Sasana', color: 'border-primary', textColor: 'text-primary' },
+        total_peserta: { label: 'Total Peserta', color: 'border-success', textColor: 'text-success' },
+        total_instruktur: { label: 'Total Instruktur', color: 'border-warning', textColor: 'text-warning' },
+        total_pengurus: { label: 'Pengurus Sasana', color: 'border-info', textColor: 'text-info' },
+    },
+        sasanaList: [],
+        carouselList: [],
+        newCarousel: {
+        title: '',
+        description: '',
+        order: 0,
+        image: null
+    },
+        uploading: false,
+        sasanaForm: {
+        id: null,
+        nama: '',
+        propinsi: '',
+        kabupaten: '',
+        kecamatan: '',
+        kelurahan_desa: '',
+        alamat: '',
+        map: '',
+        profil: null,
+        admin_username: '',
+        admin_nama: '',
+        admin_email: ''
+    },
+        isEdit: false,
+        savingSasana: false,
+        formError: '',
+        provinces: [],
+        regencies: [],
+        districts: [],
+        villages: [],
+        selectedSasanaFile: null,
+        sasanaModal: null
             }
         },
-        mounted() {
-            this.fetchSasana();
-            this.fetchCarousel();
-        },
+        async mounted() {
+        await this.fetchProvinces();
+        this.fetchSasana();
+        this.fetchCarousel();
+        const modalEl = document.getElementById('sasanaModal');
+        if(modalEl) {
+            this.sasanaModal = new bootstrap.Modal(modalEl);
+        }
+    },
         methods: {
-            getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
+        getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
                     }
                 }
-                return cookieValue;
-            },
-            async fetchSasana() {
-                try {
-                    const response = await fetch('/api/sasana/');
-                    this.sasanaList = await response.json();
-                } catch (error) { console.error(error); }
-            },
-            async fetchCarousel() {
-                try {
-                    const response = await fetch('/api/carousel/');
-                    this.carouselList = await response.json();
-                } catch (error) { console.error(error); }
-            },
-            handleFileChange(event) {
-                this.newCarousel.image = event.target.files[0];
-            },
-            async uploadCarousel() {
-                this.uploading = true;
-                const formData = new FormData();
-                formData.append('title', this.newCarousel.title);
-                formData.append('description', this.newCarousel.description);
-                formData.append('order', this.newCarousel.order);
-                formData.append('image', this.newCarousel.image);
-                formData.append('is_active', true);
+            }
+            return cookieValue;
+        },
+        async fetchSasana() {
+            try {
+                const response = await fetch('/api/sasana/');
+                this.sasanaList = await response.json();
+            } catch (error) { console.error(error); }
+        },
+        async fetchCarousel() {
+            try {
+                const response = await fetch('/api/carousel/');
+                this.carouselList = await response.json();
+            } catch (error) { console.error(error); }
+        },
+        handleFileChange(event) {
+            this.newCarousel.image = event.target.files[0];
+        },
+        async uploadCarousel() {
+            this.uploading = true;
+            const formData = new FormData();
+            formData.append('title', this.newCarousel.title);
+            formData.append('description', this.newCarousel.description);
+            formData.append('order', this.newCarousel.order);
+            formData.append('image', this.newCarousel.image);
+            formData.append('is_active', true);
 
-                try {
-                    const response = await fetch('/api/carousel/', {
-                        method: 'POST',
-                        headers: { 'X-CSRFToken': this.getCookie('csrftoken') },
-                        body: formData
-                    });
-                    if (response.ok) {
-                        this.newCarousel = { title: '', description: '', order: 0, image: null };
-                        this.$refs.fileInput.value = '';
-                        this.fetchCarousel();
-                    }
-                } catch (error) { console.error(error); }
-                finally { this.uploading = false; }
-            },
-            async toggleCarousel(item) {
-                try {
-                    await fetch(`/api/carousel/${item.id}/`, {
-                        method: 'PATCH',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': this.getCookie('csrftoken') 
-                        },
-                        body: JSON.stringify({ is_active: item.is_active })
-                    });
-                } catch (error) { console.error(error); }
-            },
-            async deleteCarousel(id) {
-                if(!confirm('Hapus slide ini?')) return;
-                try {
-                    await fetch(`/api/carousel/${id}/`, {
-                        method: 'DELETE',
-                        headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
-                    });
+            try {
+                const response = await fetch('/api/carousel/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') },
+                    body: formData
+                });
+                if (response.ok) {
+                    this.newCarousel = { title: '', description: '', order: 0, image: null };
+                    this.$refs.fileInput.value = '';
                     this.fetchCarousel();
+                }
+            } catch (error) { console.error(error); }
+            finally { this.uploading = false; }
+        },
+        async toggleCarousel(item) {
+            try {
+                await fetch(`/api/carousel/${item.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ is_active: item.is_active })
+                });
+            } catch (error) { console.error(error); }
+        },
+        async deleteCarousel(id) {
+            if (!confirm('Hapus slide ini?')) return;
+            try {
+                await fetch(`/api/carousel/${id}/`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.fetchCarousel();
+            } catch (error) { console.error(error); }
+        },
+        async openSasanaModal(sasana = null) {
+            this.formError = '';
+            if (sasana) {
+                this.isEdit = true;
+                this.sasanaForm = { ...sasana };
+                
+                // Normalisasi text ke uppercase agar v-model bisa otomatis memilih opsi yang tepat dari API
+                if (this.sasanaForm.propinsi) this.sasanaForm.propinsi = this.sasanaForm.propinsi.toUpperCase();
+                this.selectedSasanaFile = null;
+                await this.fetchRegencies(false);
+                
+                if (this.sasanaForm.kabupaten) this.sasanaForm.kabupaten = this.sasanaForm.kabupaten.toUpperCase();
+                await this.fetchDistricts(false);
+                
+                if (this.sasanaForm.kecamatan) this.sasanaForm.kecamatan = this.sasanaForm.kecamatan.toUpperCase();
+                await this.fetchVillages(false);
+                
+                if (this.sasanaForm.kelurahan_desa) this.sasanaForm.kelurahan_desa = this.sasanaForm.kelurahan_desa.toUpperCase();
+            } else {
+                this.isEdit = false;
+                this.sasanaForm = {
+                    id: null,
+                    nama: '',
+                    propinsi: '',
+                    kabupaten: '',
+                    kecamatan: '',
+                    kelurahan_desa: '',
+                    alamat: '',
+                    map: '',
+                    profil: null,
+                    admin_username: '',
+                    admin_nama: '',
+                    admin_email: ''
+                };
+                this.selectedSasanaFile = null;
+                this.regencies = [];
+                this.districts = [];
+                this.villages = [];
+            }
+            this.sasanaModal.show();
+        },
+        handleSasanaFileUpload(event) {
+            this.selectedSasanaFile = event.target.files[0];
+        },
+        async fetchProvinces() {
+            try {
+                const response = await fetch('/api/proxy-wilayah/provinces.json');
+                const json = await response.json();
+                this.provinces = json.data || [];
+            } catch (error) {
+                console.error('Error provinces:', error);
+            }
+        },
+        async fetchRegencies(resetChild = false) {
+            if (resetChild) {
+                this.sasanaForm.kabupaten = '';
+                this.sasanaForm.kecamatan = '';
+                this.sasanaForm.kelurahan_desa = '';
+                this.regencies = [];
+                this.districts = [];
+                this.villages = [];
+            }
+            if (!this.sasanaForm.propinsi) return;
+            const selectedProv = this.provinces.find(p => p.name.toUpperCase() === this.sasanaForm.propinsi.toUpperCase());
+            if (selectedProv) {
+                try {
+                    const response = await fetch(`/api/proxy-wilayah/regencies/${selectedProv.code}.json`);
+                    const json = await response.json();
+                    this.regencies = json.data;
                 } catch (error) { console.error(error); }
             }
+        },
+        async fetchDistricts(resetChild = false) {
+            if (resetChild) {
+                this.sasanaForm.kecamatan = '';
+                this.sasanaForm.kelurahan_desa = '';
+                this.districts = [];
+                this.villages = [];
+            }
+            if (!this.sasanaForm.kabupaten) return;
+            const selectedReg = this.regencies.find(r => r.name.toUpperCase() === this.sasanaForm.kabupaten.toUpperCase());
+            if (selectedReg) {
+                try {
+                    const response = await fetch(`/api/proxy-wilayah/districts/${selectedReg.code}.json`);
+                    const json = await response.json();
+                    this.districts = json.data;
+                } catch (error) { console.error(error); }
+            }
+        },
+        async fetchVillages(resetChild = false) {
+            if (resetChild) {
+                this.sasanaForm.kelurahan_desa = '';
+                this.villages = [];
+            }
+            if (!this.sasanaForm.kecamatan) return;
+            const selectedDist = this.districts.find(d => d.name.toUpperCase() === this.sasanaForm.kecamatan.toUpperCase());
+            if (selectedDist) {
+                try {
+                    const response = await fetch(`/api/proxy-wilayah/villages/${selectedDist.code}.json`);
+                    const json = await response.json();
+                    this.villages = json.data;
+                } catch (error) { console.error(error); }
+            }
+        },
+        async saveSasana() {
+            this.savingSasana = true;
+            const formData = new FormData();
+            formData.append('nama', this.sasanaForm.nama);
+            formData.append('propinsi', this.sasanaForm.propinsi);
+            formData.append('kabupaten', this.sasanaForm.kabupaten);
+            formData.append('kecamatan', this.sasanaForm.kecamatan);
+            formData.append('kelurahan_desa', this.sasanaForm.kelurahan_desa);
+            formData.append('alamat', this.sasanaForm.alamat);
+            formData.append('map', this.sasanaForm.map);
+            if (this.selectedSasanaFile) {
+                formData.append('profil', this.selectedSasanaFile);
+            }
+            if (!this.isEdit) {
+                formData.append('admin_username', this.sasanaForm.admin_username);
+                formData.append('admin_nama', this.sasanaForm.admin_nama);
+                formData.append('admin_email', this.sasanaForm.admin_email);
+            }
+            const url = this.isEdit ? `/api/sasana/${this.sasanaForm.id}/` : '/api/sasana/';
+            const method = this.isEdit ? 'PATCH' : 'POST';
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') },
+                    body: formData
+                });
+                if (response.ok) {
+                    this.sasanaModal.hide();
+                    this.fetchSasana();
+                } else {
+                    const errorData = await response.json();
+                    this.formError = errorData.error || 'Terjadi kesalahan saat menyimpan data.';
+                }
+            } catch (error) { 
+                console.error(error);
+                this.formError = 'Gagal terhubung ke server.';
+            }
+            finally { this.savingSasana = false; }
+        },
+        async deleteSasana(id) {
+            if (!confirm('Hapus sasana ini?')) return;
+            try {
+                await fetch(`/api/sasana/${id}/`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.fetchSasana();
+            } catch (error) { console.error(error); }
+        },
+        async resetPassword(sasana) {
+            if (!confirm(`Reset password untuk admin Sasana ${sasana.nama} menjadi "sasana123"?`)) return;
+            try {
+                const response = await fetch(`/api/sasana/${sasana.id}/reset_password/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message);
+                } else {
+                    alert(data.error || 'Gagal mereset password.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Terjadi kesalahan koneksi.');
+            }
         }
+    }
     }).mount('#app')
 </script>
 {% endblock %}

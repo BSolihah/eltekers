@@ -11,6 +11,7 @@ class Account(AbstractUser):
     )
     nama = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    force_password_change = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.username} ({self.role})"
@@ -22,7 +23,8 @@ class Sasana(models.Model):
     kabupaten = models.CharField(max_length=100)
     kecamatan = models.CharField(max_length=100)
     kelurahan_desa = models.CharField(max_length=100)
-    map = models.CharField(max_length=255, help_text="Koordinat Google Maps")
+    alamat = models.TextField(blank=True, null=True)
+    map = models.CharField(blank=True, null=True, max_length=255, help_text="Koordinat Google Maps")
     profil = models.ImageField(upload_to='sasana_profiles/', null=True, blank=True)
 
     def __str__(self):
@@ -45,7 +47,13 @@ class AdminSasana(models.Model):
 class PengurusSasana(models.Model):
     account = models.OneToOneField(Account, on_delete=models.CASCADE)
     sasana = models.ForeignKey(Sasana, on_delete=models.CASCADE)
-    jabatan = models.CharField(max_length=100)
+    JABATAN_CHOICES = [
+        ('Ketua', 'Ketua'),
+        ('Sekretaris', 'Sekretaris'),
+        ('Bendahara', 'Bendahara'),
+        ('Humas', 'Humas'),
+    ]
+    jabatan = models.CharField(max_length=100, choices=JABATAN_CHOICES)
     no_hp = models.CharField(max_length=20)
 
     def __str__(self):
@@ -55,7 +63,23 @@ class Instruktur(models.Model):
     account = models.OneToOneField(Account, on_delete=models.CASCADE)
     sasana = models.ForeignKey(Sasana, on_delete=models.CASCADE)
     no_hp = models.CharField(max_length=20)
-    sertifikat = models.CharField(max_length=255)
+    from django.core.validators import FileExtensionValidator
+    from django.core.exceptions import ValidationError
+
+    def validate_file_size(value):
+        filesize = value.size
+        if filesize > 2 * 1024 * 1024:  # 2MB limit
+            raise ValidationError("Ukuran file maksimal adalah 2MB")
+
+    sertifikat = models.FileField(
+        upload_to='sertifikat/', 
+        blank=True, 
+        null=True,
+        validators=[
+            FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png']),
+            validate_file_size
+        ]
+    )
     id_instruktur = models.CharField(max_length=50, unique=True)
 
     def __str__(self):

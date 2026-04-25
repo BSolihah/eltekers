@@ -8,21 +8,26 @@
     <!-- Hero Section / Carousel -->
     <div id="heroCarousel" class="carousel slide mb-5" data-bs-ride="carousel" v-if="carouselImages.length > 0">
         <div class="carousel-inner rounded shadow">
-            <div v-for="(item, index) in carouselImages" :key="item.id" :class="['carousel-item', { active: index === 0 }]">
+            <div v-for="(item, index) in carouselImages" :key="item.id"
+                :class="['carousel-item', { active: index === 0 }]">
                 <div class="position-relative" style="height: 500px; background-color: #000;">
-                    <img :src="item.image" class="d-block w-100 h-100" style="object-fit: cover; opacity: 0.8;" :alt="item.title">
-                    <div class="carousel-caption d-block w-100 start-0 bottom-0 p-4" style="background: rgba(0,0,0,0.6); text-align: left;">
+                    <img :src="item.image" class="d-block w-100 h-100" style="object-fit: cover; opacity: 0.8;"
+                        :alt="item.title">
+                    <div class="carousel-caption d-block w-100 start-0 bottom-0 p-4"
+                        style="background: rgba(0,0,0,0.6); text-align: left;">
                         <h2 class="fw-bold">[[ item.title ]]</h2>
                         <p class="lead mb-0">[[ item.description ]]</p>
                     </div>
                 </div>
             </div>
         </div>
-        <button v-if="carouselImages.length > 1" class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <button v-if="carouselImages.length > 1" class="carousel-control-prev" type="button"
+            data-bs-target="#heroCarousel" data-bs-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Previous</span>
         </button>
-        <button v-if="carouselImages.length > 1" class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <button v-if="carouselImages.length > 1" class="carousel-control-next" type="button"
+            data-bs-target="#heroCarousel" data-bs-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Next</span>
         </button>
@@ -32,10 +37,11 @@
     <div id="heroCarouselDefault" class="carousel slide mb-5" data-bs-ride="carousel" v-else>
         <div class="carousel-inner rounded shadow">
             <div class="carousel-item active">
-                <div class="d-block w-100 bg-secondary text-white d-flex align-items-end justify-content-start" style="height: 400px; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.7)), #6c757d;">
+                <div class="d-block w-100 bg-secondary text-white d-flex align-items-end justify-content-start"
+                    style="height: 400px; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.7)), #6c757d;">
                     <div class="text-start">
-                        <h2 class="fw-bold">Selamat Datang di Eltekers</h2>
-                        <p class="lead">Komunitas Terapi Ling Tien Kung.</p>
+                        <h2 class="fw-bold">Selamat Datang di Komunitas Terapi Ling Tien Kung</h2>
+                        <p class="lead">Eltekers Indonesia Sejahtera.</p>
                     </div>
                 </div>
             </div>
@@ -45,7 +51,8 @@
     <div class="row mb-5">
         <div class="col-12 text-center">
             <h1 class="display-6 fw-bold">Selamat Datang di Sistem Informasi Sasana</h1>
-            <p class="lead mb-4">Temukan sasana terdekat di wilayah Anda dan mulailah perjalanan kesehatan Anda hari ini.</p>
+            <p class="lead mb-4">Temukan sasana terdekat di wilayah Anda dan mulailah perjalanan kesehatan Anda hari
+                ini.</p>
             <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-sm-3">Daftar Sekarang</a>
             <button @click="getLocation" class="btn btn-outline-secondary btn-lg px-4" :disabled="loadingLocation">
                 <span v-if="loadingLocation"><i class="bi bi-hourglass-split"></i> Mencari...</span>
@@ -60,8 +67,10 @@
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             <div class="col" v-for="sasana in nearestSasana" :key="sasana.id">
                 <div class="card h-100 border-primary shadow-sm">
-                    <img v-if="sasana.profil" :src="sasana.profil" class="card-img-top" :alt="sasana.nama" style="height: 180px; object-fit: cover;">
-                    <div v-else class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                    <img v-if="sasana.profil" :src="sasana.profil" class="card-img-top" :alt="sasana.nama"
+                        style="height: 180px; object-fit: cover;">
+                    <div v-else class="bg-light d-flex align-items-center justify-content-center"
+                        style="height: 180px;">
                         <i class="bi bi-image text-muted fs-1"></i>
                     </div>
                     <div class="card-body">
@@ -72,7 +81,8 @@
                         <p class="card-text">[[ sasana.nama ]]</p>
                     </div>
                     <div class="card-footer bg-white border-top-0">
-                        <a :href="'https://www.google.com/maps/search/?api=1&query=' + sasana.map" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                        <a :href="'https://www.google.com/maps/search/?api=1&query=' + sasana.map" target="_blank"
+                            class="btn btn-outline-primary btn-sm w-100">
                             Cek Lokasi di Google Maps
                         </a>
                     </div>
@@ -80,7 +90,7 @@
             </div>
         </div>
     </div>
-    
+
     <div v-if="locationError" class="alert alert-warning">
         <i class="bi bi-exclamation-triangle-fill me-2"></i> [[ locationError ]]
     </div>
@@ -101,7 +111,8 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" v-model="searchFilter.kabupaten" @change="fetchDistricts" :disabled="!searchFilter.propinsi">
+                    <select class="form-select" v-model="searchFilter.kabupaten" @change="fetchDistricts"
+                        :disabled="!searchFilter.propinsi">
                         <option value="">-- Pilih Kabupaten/Kota --</option>
                         <option v-for="reg in regencies" :key="reg.code" :value="reg.name" :data-code="reg.code">
                             [[ reg.name ]]
@@ -134,9 +145,11 @@
                     <tbody>
                         <tr v-for="sasana in searchResults" :key="sasana.id">
                             <td class="fw-bold text-primary">[[ sasana.nama ]]</td>
-                            <td>[[ sasana.kelurahan_desa ]], [[ sasana.kecamatan ]], [[ sasana.kabupaten ]], [[ sasana.propinsi ]]</td>
+                            <td>[[ sasana.kelurahan_desa ]], [[ sasana.kecamatan ]], [[ sasana.kabupaten ]], [[
+                                sasana.propinsi ]]</td>
                             <td>
-                                <a :href="'https://www.google.com/maps/search/?api=1&query=' + sasana.map" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                <a :href="'https://www.google.com/maps/search/?api=1&query=' + sasana.map"
+                                    target="_blank" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-map"></i> Peta
                                 </a>
                             </td>
@@ -203,7 +216,7 @@
                 this.districts = [];
                 this.searchFilter.kabupaten = '';
                 this.searchFilter.kecamatan = '';
-                
+
                 const selectedProv = this.provinces.find(p => p.name === this.searchFilter.propinsi);
                 if (selectedProv) {
                     try {
@@ -216,7 +229,7 @@
             async fetchDistricts() {
                 this.districts = [];
                 this.searchFilter.kecamatan = '';
-                
+
                 const selectedReg = this.regencies.find(r => r.name === this.searchFilter.kabupaten);
                 if (selectedReg) {
                     try {
@@ -229,7 +242,7 @@
             getLocation() {
                 this.locationError = '';
                 this.nearestSasana = [];
-                
+
                 if (!navigator.geolocation) {
                     this.locationError = 'Geolokasi tidak didukung oleh browser Anda.';
                     return;
@@ -262,12 +275,12 @@
             async searchSasana() {
                 this.hasSearched = true;
                 let query = [];
-                if(this.searchFilter.propinsi) query.push(this.searchFilter.propinsi);
-                if(this.searchFilter.kabupaten) query.push(this.searchFilter.kabupaten);
-                if(this.searchFilter.kecamatan) query.push(this.searchFilter.kecamatan);
-                
+                if (this.searchFilter.propinsi) query.push(this.searchFilter.propinsi);
+                if (this.searchFilter.kabupaten) query.push(this.searchFilter.kabupaten);
+                if (this.searchFilter.kecamatan) query.push(this.searchFilter.kecamatan);
+
                 const searchString = query.join(' ');
-                
+
                 try {
                     const response = await fetch(`/api/sasana/?search=${encodeURIComponent(searchString)}`);
                     const data = await response.json();

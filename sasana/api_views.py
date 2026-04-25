@@ -1,4 +1,5 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
+from django.db import transaction
 from .models import (
     Account, Sasana, AdminDaerah, AdminSasana, 
     PengurusSasana, Instruktur, Peserta, 
@@ -25,6 +26,62 @@ class SasanaViewSet(viewsets.ModelViewSet):
     serializer_class = SasanaSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['nama', 'propinsi', 'kabupaten', 'kecamatan', 'kelurahan_desa', 'map']
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        admin_username = data.get('admin_username')
+        admin_password = 'sasana123'
+        admin_nama = data.get('admin_nama')
+        admin_email = data.get('admin_email', '')
+
+        if not all([admin_username, admin_nama]):
+            return Response({"error": "Data admin sasana (username, nama) wajib diisi untuk registrasi sasana baru."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if Account.objects.filter(username=admin_username).exists():
+            return Response({"error": "Username admin sudah digunakan."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                # 1. Create Account for Admin Sasana
+                admin_account = Account.objects.create_user(
+                    username=admin_username,
+                    password=admin_password,
+                    nama=admin_nama,
+                    email=admin_email,
+                    role='ADMIN_SASANA',
+                    force_password_change=True
+                )
+
+                # 2. Create Sasana and assign admin
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                sasana = serializer.save(admin_sasana=admin_account)
+
+                # 3. Create AdminSasana relation profile
+                AdminSasana.objects.create(
+                    account=admin_account,
+                    sasana=sasana
+                )
+
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def reset_password(self, request, pk=None):
+        sasana = self.get_object()
+        if not sasana.admin_sasana:
+            return Response({"error": "Sasana ini tidak memiliki Admin."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            account = sasana.admin_sasana
+            account.set_password('sasana123')
+            account.force_password_change = True
+            account.save()
+            return Response({"message": "Password admin sasana berhasil direset ke sasana123"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
     def nearest(self, request):
@@ -77,13 +134,67 @@ class PesertaViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['nik', 'account__nama']
 
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        if hasattr(self.request.user, 'adminsasana'):
+            serializer.save(sasana=self.request.user.adminsasana.sasana)
+        else:
+            if not serializer.validated_data.get('sasana'):
+                raise ValidationError({"sasana": ["Sasana ID wajib diisi jika Anda bukan Admin Sasana, atau profil Anda belum terhubung dengan Sasana."]})
+            serializer.save()
+
+    def perform_update(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        if hasattr(self.request.user, 'adminsasana'):
+            serializer.save(sasana=self.request.user.adminsasana.sasana)
+        else:
+            if not serializer.validated_data.get('sasana') and not serializer.instance.sasana:
+                raise ValidationError({"sasana": ["Sasana ID tidak boleh kosong."]})
+            serializer.save()
+
 class InstrukturViewSet(viewsets.ModelViewSet):
     queryset = Instruktur.objects.all()
     serializer_class = InstrukturSerializer
 
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        if hasattr(self.request.user, 'adminsasana'):
+            serializer.save(sasana=self.request.user.adminsasana.sasana)
+        else:
+            if not serializer.validated_data.get('sasana'):
+                raise ValidationError({"sasana": ["Sasana ID wajib diisi jika Anda bukan Admin Sasana, atau profil Anda belum terhubung dengan Sasana."]})
+            serializer.save()
+
+    def perform_update(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        if hasattr(self.request.user, 'adminsasana'):
+            serializer.save(sasana=self.request.user.adminsasana.sasana)
+        else:
+            if not serializer.validated_data.get('sasana') and not serializer.instance.sasana:
+                raise ValidationError({"sasana": ["Sasana ID tidak boleh kosong."]})
+            serializer.save()
+
 class PengurusSasanaViewSet(viewsets.ModelViewSet):
     queryset = PengurusSasana.objects.all()
     serializer_class = PengurusSasanaSerializer
+
+    def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        if hasattr(self.request.user, 'adminsasana'):
+            serializer.save(sasana=self.request.user.adminsasana.sasana)
+        else:
+            if not serializer.validated_data.get('sasana'):
+                raise ValidationError({"sasana": ["Sasana ID wajib diisi jika Anda bukan Admin Sasana, atau profil Anda belum terhubung dengan Sasana."]})
+            serializer.save()
+
+    def perform_update(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        if hasattr(self.request.user, 'adminsasana'):
+            serializer.save(sasana=self.request.user.adminsasana.sasana)
+        else:
+            if not serializer.validated_data.get('sasana') and not serializer.instance.sasana:
+                raise ValidationError({"sasana": ["Sasana ID tidak boleh kosong."]})
+            serializer.save()
 
 class KeterbatasanFisikViewSet(viewsets.ModelViewSet):
     queryset = KeterbatasanFisik.objects.all()
@@ -101,12 +212,51 @@ import urllib.request
 import json
 from django.http import JsonResponse
 
+import requests
+from django.http import JsonResponse
+
 def proxy_wilayah(request, endpoint):
-    url = f"https://wilayah.id/api/{endpoint}"
+    # Coba sumber utama (emsifa) jika memungkinkan, atau tetap gunakan wilayah.id
+    # Kita akan mencoba memetakan endpoint wilayah.id ke emsifa
+    # wilayah.id: provinces.json, regencies/{id}.json, districts/{id}.json, villages/{id}.json
+    # emsifa: provinces.json, regencies/{id}.json, districts/{id}.json, villages/{id}.json (sama)
+    
+    primary_url = f"https://www.emsifa.com/api-wilayah-indonesia/api/{endpoint}"
+    fallback_url = f"https://wilayah.id/api/{endpoint}"
+    
     try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req) as response:
-            data = json.loads(response.read().decode())
-            return JsonResponse(data, safe=False)
+        # Mencoba primary source
+        try:
+            response = requests.get(primary_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+        except Exception:
+            # Jika primary gagal, coba fallback
+            response = requests.get(fallback_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+
+        # Normalisasi struktur respons
+        # 1. Pastikan dalam bentuk {"data": [...]}
+        if isinstance(data, list):
+            raw_list = data
+        elif isinstance(data, dict) and "data" in data:
+            raw_list = data["data"]
+        else:
+            raw_list = [data] if data else []
+
+        # 2. Pastikan setiap item punya 'code' dan 'name'
+        # emsifa sering pakai 'id', wilayah.id pakai 'code'
+        normalized_data = []
+        for item in raw_list:
+            if not isinstance(item, dict): continue
+            code = str(item.get('code') or item.get('id') or '')
+            name = str(item.get('name') or '')
+            if code and name:
+                normalized_data.append({'code': code, 'name': name})
+        
+        return JsonResponse({'data': normalized_data}, safe=False)
+        
     except Exception as e:
+        print(f"Proxy Final Error: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
