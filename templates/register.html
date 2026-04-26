@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrasi Peserta - Eltekers{% endblock %}
+
+{% block content %}
+<div id="register-app" v-cloak class="row justify-content-center mt-4 mb-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white py-3">
+                <h3 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Pendaftaran Peserta Baru</h3>
+            </div>
+            <div class="card-body p-4">
+                
+                <div v-if="successMessage" class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i> [[ successMessage ]]
+                    <br><a href="{% url 'login' %}" class="alert-link">Klik di sini untuk Login</a>
+                </div>
+
+                <div v-if="errorMessage" class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> [[ errorMessage ]]
+                </div>
+
+                <form @submit.prevent="submitRegistration" v-if="!successMessage">
+                    <!-- Akun Dasar -->
+                    <h5 class="border-bottom pb-2 mb-3 text-secondary">Informasi Akun</h5>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="form.username" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" v-model="form.password" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Konfirmasi Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" v-model="form.password_confirm" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" v-model="form.nama" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control" v-model="form.email">
+                    </div>
+
+                    <!-- Data Peserta -->
+                    <h5 class="border-bottom pb-2 mb-3 text-secondary">Data Diri Peserta</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">NIK (16 Digit) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.nik" maxlength="16" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">No. HP <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" v-model="form.no_hp" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tanggal Lahir <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" v-model="form.tanggal_lahir" required>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Berat Badan (kg)</label>
+                            <input type="number" step="0.1" class="form-control" v-model="form.berat_badan">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Tinggi Badan (cm)</label>
+                            <input type="number" step="0.1" class="form-control" v-model="form.tinggi_badan">
+                        </div>
+                    </div>
+
+                    <!-- Pemilihan Sasana -->
+                    <h5 class="border-bottom pb-2 mb-3 text-secondary">Pilih Sasana Tempat Mendaftar <span class="text-danger">*</span></h5>
+                    <div class="mb-4">
+                        <div v-if="selectedSasana" class="alert alert-info d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>[[ selectedSasana.nama ]]</strong><br>
+                                <small>[[ selectedSasana.kecamatan ]], [[ selectedSasana.kabupaten ]]</small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger" @click="selectedSasana = null">Ganti Sasana</button>
+                        </div>
+                        <div v-else>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" v-model="searchSasanaQuery" @input="searchSasana" placeholder="Ketik nama sasana atau lokasi...">
+                            </div>
+                            <div class="list-group" v-if="sasanaList.length > 0 && searchSasanaQuery.length > 0">
+                                <button type="button" class="list-group-item list-group-item-action" v-for="s in sasanaList" :key="s.id" @click="selectSasana(s)">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">[[ s.nama ]]</h6>
+                                    </div>
+                                    <p class="mb-1 small text-muted">[[ s.kelurahan_desa ]], [[ s.kecamatan ]], [[ s.kabupaten ]]</p>
+                                </button>
+                            </div>
+                            <small class="text-muted" v-if="sasanaList.length === 0 && searchSasanaQuery.length > 2">Tidak menemukan sasana dengan kata kunci tersebut.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-5">
+                        <button type="submit" class="btn btn-success btn-lg" :disabled="loading || !isFormValid">
+                            <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            [[ loading ? 'Memproses...' : 'Daftar Sekarang' ]]
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer bg-light text-center py-3">
+                <p class="mb-0">Sudah punya akun? <a href="{% url 'login' %}" class="fw-bold text-decoration-none">Login di sini</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const { createApp } = Vue
+
+    createApp({
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                form: {
+                    username: '',
+                    password: '',
+                    password_confirm: '',
+                    nama: '',
+                    email: '',
+                    nik: '',
+                    no_hp: '',
+                    tanggal_lahir: '',
+                    berat_badan: '',
+                    tinggi_badan: ''
+                },
+                searchSasanaQuery: '',
+                sasanaList: [],
+                selectedSasana: null,
+                loading: false,
+                errorMessage: '',
+                successMessage: ''
+            }
+        },
+        computed: {
+            isFormValid() {
+                return this.form.username && 
+                       this.form.password && 
+                       this.form.password === this.form.password_confirm &&
+                       this.form.nama && 
+                       this.form.nik && 
+                       this.form.no_hp && 
+                       this.form.tanggal_lahir && 
+                       this.selectedSasana;
+            }
+        },
+        methods: {
+            async searchSasana() {
+                if(this.searchSasanaQuery.length < 3) {
+                    this.sasanaList = [];
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/sasana/?search=${encodeURIComponent(this.searchSasanaQuery)}`);
+                    const data = await response.json();
+                    this.sasanaList = data.slice(0, 5); // Ambil 5 teratas
+                } catch (error) {
+                    console.error("Error searching sasana:", error);
+                }
+            },
+            selectSasana(sasana) {
+                this.selectedSasana = sasana;
+                this.searchSasanaQuery = '';
+                this.sasanaList = [];
+            },
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            },
+            async submitRegistration() {
+                this.errorMessage = '';
+                this.successMessage = '';
+                
+                if(this.form.password !== this.form.password_confirm) {
+                    this.errorMessage = "Password dan Konfirmasi Password tidak cocok.";
+                    return;
+                }
+
+                this.loading = true;
+                const csrfToken = this.getCookie('csrftoken') || '{{ csrf_token }}';
+
+                try {
+                    // Endpoint khusus atau manual view untuk registrasi karena melibatkan pembuatan Account dan Peserta
+                    // Untuk sementara, kita post ke backend view Django standar yang akan kita buat
+                    
+                    const response = await fetch('{% url "register" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            ...this.form,
+                            sasana_id: this.selectedSasana.id
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if(response.ok) {
+                        this.successMessage = "Registrasi berhasil! Silakan login menggunakan username dan password Anda.";
+                        this.form = {}; // reset form
+                        this.selectedSasana = null;
+                    } else {
+                        this.errorMessage = data.error || "Terjadi kesalahan saat registrasi. Mohon periksa kembali data Anda.";
+                    }
+                } catch (error) {
+                    this.errorMessage = "Gagal terhubung ke server.";
+                    console.error(error);
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }
+    }).mount('#register-app')
+</script>
+{% endblock %}

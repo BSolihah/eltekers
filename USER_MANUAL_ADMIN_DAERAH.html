@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Manual Admin Daerah - EIS Bogor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #f4f7f6;
+        }
+        
+        .container {
+            background-color: #fff;
+            padding: 60px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #2980b9;
+            margin-top: 40px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-top: 25px;
+        }
+        
+        ul, ol {
+            margin-bottom: 20px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .header img {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #95a5a6;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        @media print {
+            body {
+                background-color: #fff;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+
+        .btn-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .btn-print:hover {
+            transform: translateY(-2px);
+            background-color: #2ecc71;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn-print no-print" onclick="window.print()">Simpan sebagai PDF</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>Panduan Pengguna: Admin Daerah</h1>
+            <p class="badge">Sistem Informasi Ekosistem (EIS) Bogor</p>
+        </div>
+
+        <p>Dokumen ini menjelaskan langkah-langkah penggunaan Dashboard Admin Daerah pada sistem EIS Bogor.</p>
+
+        <h2>1. Login & Dashboard Utama</h2>
+        <p>Setelah login menggunakan akun Admin Daerah, Anda akan diarahkan ke Dashboard Utama.</p>
+        <ul>
+            <li><strong>Statistik</strong>: Di bagian atas, Anda dapat melihat jumlah total Sasana, Peserta, Instruktur, dan Pengurus Sasana di wilayah Anda.</li>
+            <li><strong>Identitas Wilayah</strong>: Nama wilayah Anda tertera di sebelah judul dashboard.</li>
+        </ul>
+
+        <h2>2. Manajemen Sasana (Tab: Daftar Sasana)</h2>
+        <p>Menu ini digunakan untuk mengelola seluruh Sasana yang berada di bawah naungan wilayah Anda.</p>
+
+        <h3>A. Registrasi Sasana Baru</h3>
+        <ol>
+            <li>Klik tombol <strong>"Registrasi Sasana Baru"</strong>.</li>
+            <li>Masukkan <strong>Nama Sasana</strong>.</li>
+            <li><strong>Penting: Buat Akun Admin Sasana</strong>. Isi Username dan Nama Lengkap Admin.
+                <ul><li><em>Catatan: Password awal untuk Admin Sasana baru adalah <strong>sasana123</strong>.</em></li></ul>
+            </li>
+            <li>Pilih lokasi lengkap (Provinsi, Kabupaten, Kecamatan, Desa).</li>
+            <li>Masukkan alamat lengkap dan koordinat Map (opsional).</li>
+            <li>Klik <strong>"Registrasi Sasana"</strong>.</li>
+        </ol>
+
+        <h3>B. Mengedit Data Sasana</h3>
+        <ol>
+            <li>Klik ikon <strong>Pensil (Edit)</strong> pada baris sasana yang ingin diubah.</li>
+            <li>Anda dapat mengubah detail lokasi atau mengunggah <strong>Foto Profil Sasana</strong>.</li>
+            <li>Klik <strong>"Simpan Perubahan"</strong>.</li>
+        </ol>
+
+        <h3>C. Reset Password Admin Sasana</h3>
+        <ol>
+            <li>Klik ikon <strong>Kunci (Reset Password)</strong> pada baris sasana tersebut.</li>
+            <li>Klik "OK" pada kotak konfirmasi.</li>
+            <li>Password admin tersebut akan diatur ulang kembali menjadi <strong>sasana123</strong>.</li>
+        </ol>
+
+        <h2>3. Manajemen Slidebar / Carousel</h2>
+        <p>Menu ini digunakan untuk mengatur gambar yang muncul di halaman depan (Landing Page).</p>
+        <ul>
+            <li><strong>Tambah Slide</strong>: Pilih gambar landscape, masukkan judul dan deskripsi, lalu simpan.</li>
+            <li><strong>Status Aktif</strong>: Gunakan tombol switch untuk menyembunyikan/menampilkan slide di website.</li>
+            <li><strong>Urutan</strong>: Atur angka urutan agar informasi yang paling penting muncul pertama.</li>
+        </ul>
+
+        <div class="footer">
+            <p>&copy; 2026 EIS Bogor - Sistem Manajemen Sasana Terintegrasi</p>
+        </div>
+    </div>
+</body>
+</html>

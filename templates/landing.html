@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block title %}Beranda - Eltekers{% endblock %}
+
+{% block content %}
+<div id="landing-app" v-cloak>
+
+    <!-- Hero Section / Carousel -->
+    <div id="heroCarousel" class="carousel slide mb-5" data-bs-ride="carousel" v-if="carouselImages.length > 0">
+        <div class="carousel-inner rounded shadow">
+            <div v-for="(item, index) in carouselImages" :key="item.id"
+                :class="['carousel-item', { active: index === 0 }]">
+                <div class="position-relative" style="height: 500px; background-color: #000;">
+                    <img :src="item.image" class="d-block w-100 h-100" style="object-fit: cover; opacity: 0.8;"
+                        :alt="item.title">
+                    <div class="carousel-caption d-block w-100 start-0 bottom-0 p-4"
+                        style="background: rgba(0,0,0,0.6); text-align: left;">
+                        <h2 class="fw-bold">[[ item.title ]]</h2>
+                        <p class="lead mb-0">[[ item.description ]]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button v-if="carouselImages.length > 1" class="carousel-control-prev" type="button"
+            data-bs-target="#heroCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button v-if="carouselImages.length > 1" class="carousel-control-next" type="button"
+            data-bs-target="#heroCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+
+    <!-- Default Carousel if Empty -->
+    <div id="heroCarouselDefault" class="carousel slide mb-5" data-bs-ride="carousel" v-else>
+        <div class="carousel-inner rounded shadow">
+            <div class="carousel-item active">
+                <div class="d-block w-100 bg-secondary text-white d-flex align-items-end justify-content-start"
+                    style="height: 400px; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.7)), #6c757d;">
+                    <div class="text-start">
+                        <h2 class="fw-bold">Selamat Datang di Komunitas Terapi Ling Tien Kung</h2>
+                        <p class="lead">Eltekers Indonesia Sejahtera.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-6 fw-bold">Selamat Datang di Sistem Informasi Sasana</h1>
+            <p class="lead mb-4">Temukan sasana terdekat di wilayah Anda dan mulailah perjalanan kesehatan Anda hari
+                ini.</p>
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-sm-3">Daftar Sekarang</a>
+            <button @click="getLocation" class="btn btn-outline-secondary btn-lg px-4" :disabled="loadingLocation">
+                <span v-if="loadingLocation"><i class="bi bi-hourglass-split"></i> Mencari...</span>
+                <span v-else><i class="bi bi-geo-alt-fill"></i> Cari 10 Sasana Terdekat (GPS)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Hasil Sasana Terdekat -->
+    <div v-if="nearestSasana.length > 0" class="mb-5">
+        <h3 class="mb-4 text-primary"><i class="bi bi-geo-fill me-2"></i>10 Sasana Terdekat dari Lokasi Anda</h3>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div class="col" v-for="sasana in nearestSasana" :key="sasana.id">
+                <div class="card h-100 border-primary shadow-sm">
+                    <img v-if="sasana.profil" :src="sasana.profil" class="card-img-top" :alt="sasana.nama"
+                        style="height: 180px; object-fit: cover;">
+                    <div v-else class="bg-light d-flex align-items-center justify-content-center"
+                        style="height: 180px;">
+                        <i class="bi bi-image text-muted fs-1"></i>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-primary fw-bold">[[ sasana.nama ]]</h5>
+                        <p class="card-text text-muted mb-2 small">
+                            <i class="bi bi-geo-alt me-1"></i> [[ sasana.kecamatan ]], [[ sasana.kabupaten ]]
+                        </p>
+                        <p class="card-text">[[ sasana.nama ]]</p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a :href="'https://www.google.com/maps/search/?api=1&query=' + sasana.map" target="_blank"
+                            class="btn btn-outline-primary btn-sm w-100">
+                            Cek Lokasi di Google Maps
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div v-if="locationError" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> [[ locationError ]]
+    </div>
+
+    <!-- Pencarian Manual -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="bi bi-search me-2"></i>Pencarian Sasana Terbuka</h4>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-center mb-4">
+                <div class="col-md-3">
+                    <select class="form-select" v-model="searchFilter.propinsi" @change="fetchRegencies">
+                        <option value="">-- Pilih Propinsi --</option>
+                        <option v-for="prov in provinces" :key="prov.code" :value="prov.name" :data-code="prov.code">
+                            [[ prov.name ]]
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="searchFilter.kabupaten" @change="fetchDistricts"
+                        :disabled="!searchFilter.propinsi">
+                        <option value="">-- Pilih Kabupaten/Kota --</option>
+                        <option v-for="reg in regencies" :key="reg.code" :value="reg.name" :data-code="reg.code">
+                            [[ reg.name ]]
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" v-model="searchFilter.kecamatan" :disabled="!searchFilter.kabupaten">
+                        <option value="">-- Pilih Kecamatan --</option>
+                        <option v-for="dist in districts" :key="dist.code" :value="dist.name">
+                            [[ dist.name ]]
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button @click="searchSasana" class="btn btn-primary w-100">Cari Sasana</button>
+                </div>
+            </div>
+
+            <!-- Tabel Hasil -->
+            <div class="table-responsive" v-if="searchResults.length > 0">
+                <table class="table table-hover table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nama Sasana</th>
+                            <th>Alamat / Wilayah</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="sasana in searchResults" :key="sasana.id">
+                            <td class="fw-bold text-primary">[[ sasana.nama ]]</td>
+                            <td>[[ sasana.kelurahan_desa ]], [[ sasana.kecamatan ]], [[ sasana.kabupaten ]], [[
+                                sasana.propinsi ]]</td>
+                            <td>
+                                <a :href="'https://www.google.com/maps/search/?api=1&query=' + sasana.map"
+                                    target="_blank" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-map"></i> Peta
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div v-else-if="hasSearched" class="alert alert-info">
+                Tidak ada sasana yang ditemukan dengan kriteria tersebut.
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const { createApp } = Vue
+
+    createApp({
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                loadingLocation: false,
+                locationError: '',
+                nearestSasana: [],
+                searchFilter: {
+                    propinsi: '',
+                    kabupaten: '',
+                    kecamatan: ''
+                },
+                searchResults: [],
+                hasSearched: false,
+                carouselImages: [],
+                provinces: [],
+                regencies: [],
+                districts: []
+            }
+        },
+        mounted() {
+            this.fetchCarousel();
+            this.fetchProvinces();
+        },
+        methods: {
+            async fetchCarousel() {
+                try {
+                    const response = await fetch('/api/carousel/?is_active=true');
+                    const data = await response.json();
+                    this.carouselImages = data;
+                } catch (error) {
+                    console.error('Error fetching carousel:', error);
+                }
+            },
+            async fetchProvinces() {
+                try {
+                    const response = await fetch('/api/proxy-wilayah/provinces.json');
+                    const json = await response.json();
+                    this.provinces = json.data;
+                } catch (error) { console.error('Error fetching provinces:', error); }
+            },
+            async fetchRegencies() {
+                this.regencies = [];
+                this.districts = [];
+                this.searchFilter.kabupaten = '';
+                this.searchFilter.kecamatan = '';
+
+                const selectedProv = this.provinces.find(p => p.name === this.searchFilter.propinsi);
+                if (selectedProv) {
+                    try {
+                        const response = await fetch(`/api/proxy-wilayah/regencies/${selectedProv.code}.json`);
+                        const json = await response.json();
+                        this.regencies = json.data;
+                    } catch (error) { console.error('Error fetching regencies:', error); }
+                }
+            },
+            async fetchDistricts() {
+                this.districts = [];
+                this.searchFilter.kecamatan = '';
+
+                const selectedReg = this.regencies.find(r => r.name === this.searchFilter.kabupaten);
+                if (selectedReg) {
+                    try {
+                        const response = await fetch(`/api/proxy-wilayah/districts/${selectedReg.code}.json`);
+                        const json = await response.json();
+                        this.districts = json.data;
+                    } catch (error) { console.error('Error fetching districts:', error); }
+                }
+            },
+            getLocation() {
+                this.locationError = '';
+                this.nearestSasana = [];
+
+                if (!navigator.geolocation) {
+                    this.locationError = 'Geolokasi tidak didukung oleh browser Anda.';
+                    return;
+                }
+
+                this.loadingLocation = true;
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        this.loadingLocation = false;
+                        this.fetchNearest(position.coords.latitude, position.coords.longitude);
+                    },
+                    (error) => {
+                        this.loadingLocation = false;
+                        this.locationError = 'Gagal mendapatkan lokasi Anda. Pastikan Anda mengizinkan akses lokasi.';
+                        console.error("Error getting location:", error);
+                    }
+                );
+            },
+            async fetchNearest(lat, lng) {
+                try {
+                    const response = await fetch(`/api/sasana/nearest/?lat=${lat}&lng=${lng}`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    this.nearestSasana = data;
+                } catch (error) {
+                    this.locationError = 'Terjadi kesalahan saat memuat data sasana terdekat.';
+                    console.error('Error:', error);
+                }
+            },
+            async searchSasana() {
+                this.hasSearched = true;
+                let query = [];
+                if (this.searchFilter.propinsi) query.push(this.searchFilter.propinsi);
+                if (this.searchFilter.kabupaten) query.push(this.searchFilter.kabupaten);
+                if (this.searchFilter.kecamatan) query.push(this.searchFilter.kecamatan);
+
+                const searchString = query.join(' ');
+
+                try {
+                    const response = await fetch(`/api/sasana/?search=${encodeURIComponent(searchString)}`);
+                    const data = await response.json();
+                    this.searchResults = data;
+                } catch (error) {
+                    console.error('Error fetching search results:', error);
+                }
+            }
+        }
+    }).mount('#landing-app')
+</script>
+{% endblock %}

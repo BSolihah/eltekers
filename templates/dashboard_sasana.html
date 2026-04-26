@@ -1,0 +1,746 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Admin Sasana - Eltekers{% endblock %}
+
+{% block content %}
+<div id="app" v-cloak>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2"><i class="bi bi-house-heart me-2 text-primary"></i>Dashboard Pengurus Sasana</h1>
+        <span v-if="sasana" class="badge bg-primary fs-6" v-text="sasana.nama"></span>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger shadow-sm">
+        <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Akses Ditolak</h4>
+        <p>{{ error }}</p>
+        <hr>
+        <p class="mb-0">Silakan hubungi Admin Daerah atau Superadmin untuk melengkapi profil Anda dan menghubungkannya dengan sebuah Sasana.</p>
+    </div>
+    {% else %}
+
+    <!-- Statistik Ringkas -->
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+        <div class="col">
+            <div class="card h-100 border-start border-primary border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase fw-bold small mb-2">Total Peserta</div>
+                    <div class="h3 mb-0 text-primary">[[ stats.total_peserta ]]</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-start border-success border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase fw-bold small mb-2">Total Instruktur</div>
+                    <div class="h3 mb-0 text-success">[[ stats.total_instruktur ]]</div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card h-100 border-start border-info border-4 shadow-sm">
+                <div class="card-body">
+                    <div class="text-muted text-uppercase fw-bold small mb-2">Total Pengurus</div>
+                    <div class="h3 mb-0 text-info">[[ stats.total_pengurus ]]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigasi Tab -->
+    <ul class="nav nav-pills mb-4 bg-white p-2 rounded shadow-sm">
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'peserta' }]" @click="activeTab = 'peserta'">
+                <i class="bi bi-people me-2"></i>Daftar Peserta
+            </button>
+        </li>
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'pengurus' }]" @click="activeTab = 'pengurus'">
+                <i class="bi bi-person-workspace me-2"></i>Kelola Pengurus
+            </button>
+        </li>
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'instruktur' }]" @click="activeTab = 'instruktur'">
+                <i class="bi bi-person-badge me-2"></i>Kelola Instruktur
+            </button>
+        </li>
+        <li class="nav-item">
+            <button :class="['nav-link', { active: activeTab === 'edit_sasana' }]" @click="activeTab = 'edit_sasana'">
+                <i class="bi bi-pencil-square me-2"></i>Edit Profil Sasana
+            </button>
+        </li>
+    </ul>
+
+    <!-- Section Daftar Peserta -->
+    <div v-if="activeTab === 'peserta'" class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3">
+            <h4 class="mb-3 mb-md-0">Daftar Peserta Sasana</h4>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm" @click="openModal('peserta')">
+                    <i class="bi bi-plus-lg me-1"></i>Registrasi Peserta
+                </button>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" v-model="search" class="form-control" placeholder="Cari NIK atau Nama...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">NIK</th>
+                            <th>Nama</th>
+                            <th>No HP</th>
+                            <th class="pe-4 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="p in filteredPeserta" :key="p.id">
+                            <td class="ps-4">[[ p.nik ]]</td>
+                            <td class="fw-bold">[[ p.account.nama ]]</td>
+                            <td>[[ p.no_hp ]]</td>
+                            <td class="pe-4 text-end">
+                                <button class="btn btn-sm btn-outline-primary" @click="openModal('peserta', p)" title="Edit"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteItem('peserta', p.id)" title="Hapus"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr v-if="filteredPeserta.length === 0">
+                            <td colspan="4" class="text-center py-4 text-muted">Tidak ada data peserta yang sesuai.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Kelola Pengurus -->
+    <div v-if="activeTab === 'pengurus'" class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h4 class="mb-0">Kelola Pengurus Sasana</h4>
+            <button class="btn btn-primary btn-sm" @click="openModal('pengurus')">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Pengurus
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">Nama</th>
+                            <th>Jabatan</th>
+                            <th>No HP</th>
+                            <th class="pe-4 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in pengurusList" :key="item.id">
+                            <td class="ps-4 fw-bold">[[ item.account.nama ]]</td>
+                            <td>[[ item.jabatan ]]</td>
+                            <td>[[ item.no_hp ]]</td>
+                            <td class="pe-4 text-end">
+                                <button class="btn btn-sm btn-outline-primary" @click="openModal('pengurus', item)" title="Edit"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteItem('pengurus', item.id)" title="Hapus"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr v-if="pengurusList.length === 0">
+                            <td colspan="4" class="text-center py-4 text-muted">Belum ada data pengurus.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Kelola Instruktur -->
+    <div v-if="activeTab === 'instruktur'" class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h4 class="mb-0">Kelola Instruktur Sasana</h4>
+            <button class="btn btn-primary btn-sm" @click="openModal('instruktur')">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Instruktur
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">ID Instruktur</th>
+                            <th>Nama</th>
+                            <th>Sertifikat</th>
+                            <th>No HP</th>
+                            <th class="pe-4 text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in instrukturList" :key="item.id">
+                            <td class="ps-4">[[ item.id_instruktur ]]</td>
+                            <td class="fw-bold">[[ item.account.nama ]]</td>
+                            <td>
+                                <div v-if="item.sertifikat" class="d-flex align-items-center">
+                                    <a :href="item.sertifikat" target="_blank" class="badge bg-info text-decoration-none me-1">
+                                        <i class="bi bi-eye me-1"></i>Lihat
+                                    </a>
+                                    <button class="btn btn-link btn-sm p-0 text-secondary" @click="copyToClipboard(item.sertifikat)" title="Salin Link Sertifikat">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                                <span v-else class="text-muted small">Belum ada</span>
+                            </td>
+                            <td>[[ item.no_hp ]]</td>
+                            <td class="pe-4 text-end">
+                                <button class="btn btn-sm btn-outline-primary" @click="openModal('instruktur', item)" title="Edit"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" @click="deleteItem('instruktur', item.id)" title="Hapus"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr v-if="instrukturList.length === 0">
+                            <td colspan="5" class="text-center py-4 text-muted">Belum ada data instruktur.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Edit Profil Sasana -->
+    <div v-if="activeTab === 'edit_sasana'" class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h4 class="mb-0">Edit Profil Sasana</h4>
+        </div>
+        <div class="card-body">
+            <div v-if="updateSuccess" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> Profil sasana berhasil diperbarui!
+                <button type="button" class="btn-close" @click="updateSuccess = false"></button>
+            </div>
+            
+            <form @submit.prevent="updateSasana" v-if="sasana">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nama Sasana</label>
+                    <input type="text" class="form-control" v-model="sasana.nama" required>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Propinsi</label>
+                        <select class="form-select" v-model="sasana.propinsi" @change="fetchRegencies(true)" required>
+                            <option value="">-- Pilih Propinsi --</option>
+                            {% verbatim %}
+                            <option v-for="prov in provinces" :key="prov.code" :value="prov.name" v-text="prov.name"></option>
+                            {% endverbatim %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Kabupaten/Kota</label>
+                        <select class="form-select" v-model="sasana.kabupaten" @change="fetchDistricts(true)" :disabled="!sasana.propinsi" required>
+                            <option value="">-- Pilih Kabupaten --</option>
+                            {% verbatim %}
+                            <option v-for="reg in regencies" :key="reg.code" :value="reg.name" v-text="reg.name"></option>
+                            {% endverbatim %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Kecamatan</label>
+                        <select class="form-select" v-model="sasana.kecamatan" @change="fetchVillages(true)" :disabled="!sasana.kabupaten" required>
+                            <option value="">-- Pilih Kecamatan --</option>
+                            {% verbatim %}
+                            <option v-for="dist in districts" :key="dist.code" :value="dist.name" v-text="dist.name"></option>
+                            {% endverbatim %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Desa/Kelurahan</label>
+                    <select class="form-select" v-model="sasana.kelurahan_desa" :disabled="!sasana.kecamatan" required>
+                        <option value="">-- Pilih Desa/Kelurahan --</option>
+                        {% verbatim %}
+                        <option v-for="vil in villages" :key="vil.code" :value="vil.name" v-text="vil.name"></option>
+                        {% endverbatim %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Alamat Lengkap</label>
+                    <textarea class="form-control" v-model="sasana.alamat" rows="2" placeholder="Jalan, No. Rumah, RT/RW..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Koordinat Map</label>
+                    <input type="text" class="form-control" v-model="sasana.map" placeholder="Contoh: -6.6000, 106.8000">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Foto Profil Sasana (Gambar)</label>
+                    <div v-if="sasana.profil && typeof sasana.profil === 'string'" class="mb-2">
+                        <img :src="sasana.profil" class="img-thumbnail" style="max-height: 200px;">
+                        <p class="small text-muted">Gambar saat ini</p>
+                    </div>
+                    <input type="file" class="form-control" @change="handleProfileUpload" accept="image/*">
+                    <small class="text-muted">Pilih file gambar baru untuk mengganti foto profil.</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary" :disabled="saving">
+                    <span v-if="saving" class="spinner-border spinner-border-sm me-2"></span>
+                    Simpan Perubahan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Form Dinamis -->
+    <div class="modal fade" id="formModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">[[ modalTitle ]]</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form @submit.prevent="saveItem">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nama Lengkap</label>
+                                <input type="text" class="form-control" v-model="form.account.nama" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Username</label>
+                                <input type="text" class="form-control" v-model="form.account.username" :disabled="isEdit" required>
+                                <small v-if="!isEdit" class="text-muted">Password awal: <b>member123</b></small>
+                            </div>
+                        </div>
+
+                        <!-- Fields for Peserta -->
+                        <div v-if="modalType === 'peserta'">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">NIK</label>
+                                    <input type="text" class="form-control" v-model="form.nik" required maxlength="16">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">No HP</label>
+                                    <input type="text" class="form-control" v-model="form.no_hp" required>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tanggal Lahir</label>
+                                    <input type="date" class="form-control" v-model="form.tanggal_lahir" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Berat Badan (kg)</label>
+                                    <input type="number" step="0.1" class="form-control" v-model="form.berat_badan" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tinggi Badan (cm)</label>
+                                    <input type="number" step="0.1" class="form-control" v-model="form.tinggi_badan" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fields for Pengurus -->
+                        <div v-if="modalType === 'pengurus'">
+                            <div class="mb-3" v-if="!isEdit">
+                                <label class="form-label fw-bold text-primary">Pilih dari Peserta (Opsi Cepat)</label>
+                                <select class="form-select border-primary" @change="fillFromPeserta($event)">
+                                    <option value="">-- Pilih Peserta --</option>
+                                    <option v-for="p in pesertaList" :key="p.id" :value="p.id">[[ p.account.nama ]] ([[ p.nik ]])</option>
+                                </select>
+                                <small class="text-muted">Gunakan ini jika pengurus diambil dari peserta yang sudah terdaftar.</small>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Jabatan</label>
+                                    <select class="form-select" v-model="form.jabatan" required>
+                                        <option value="">-- Pilih Jabatan --</option>
+                                        <option value="Ketua">Ketua</option>
+                                        <option value="Sekretaris">Sekretaris</option>
+                                        <option value="Bendahara">Bendahara</option>
+                                        <option value="Humas">Humas</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">No HP</label>
+                                    <input type="text" class="form-control" v-model="form.no_hp" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fields for Instruktur -->
+                        <div v-if="modalType === 'instruktur'">
+                            <div class="mb-3" v-if="!isEdit">
+                                <label class="form-label fw-bold text-primary">Pilih dari Peserta (Opsi Cepat)</label>
+                                <select class="form-select border-primary" @change="fillFromPeserta($event)">
+                                    <option value="">-- Pilih Peserta --</option>
+                                    <option v-for="p in pesertaList" :key="p.id" :value="p.id">[[ p.account.nama ]] ([[ p.nik ]])</option>
+                                </select>
+                                <small class="text-muted">Gunakan ini jika instruktur diambil dari peserta yang sudah terdaftar.</small>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">ID Instruktur</label>
+                                    <input type="text" class="form-control" v-model="form.id_instruktur" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Sertifikat (File)</label>
+                                    <input type="file" class="form-control" @change="handleCertUpload" accept=".pdf,.jpg,.jpeg,.png">
+                                    <small v-if="isEdit && form.sertifikat" class="text-muted">
+                                        File saat ini: <a :href="form.sertifikat" target="_blank">Lihat Sertifikat</a>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">No HP</label>
+                                <input type="text" class="form-control" v-model="form.no_hp" required>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary" :disabled="saving">
+                                <span v-if="saving" class="spinner-border spinner-border-sm me-2"></span>
+                                Simpan Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const { createApp } = Vue
+    createApp({
+        delimiters: ['[[', ']]'],
+        data() {
+            return {
+                activeTab: 'peserta',
+                search: '',
+                stats: { total_peserta: 0, total_instruktur: 0, total_pengurus: 0 },
+                sasana: null,
+                pesertaList: [],
+                pengurusList: [],
+                instrukturList: [],
+                provinces: [],
+                regencies: [],
+                districts: [],
+                villages: [],
+                saving: false,
+                updateSuccess: false,
+                selectedFile: null,
+                selectedCertFile: null,
+                modalType: 'peserta',
+                isEdit: false,
+                form: { account: {} }
+            }
+        },
+        computed: {
+            filteredPeserta() {
+                if (!this.search) return this.pesertaList;
+                const s = this.search.toLowerCase();
+                return this.pesertaList.filter(p =>
+                    p.nik.toLowerCase().includes(s) ||
+                    p.account.nama.toLowerCase().includes(s)
+                );
+            },
+            modalTitle() {
+                const action = this.isEdit ? 'Perbarui' : 'Registrasi';
+                const map = {
+                    peserta: 'Anggota / Peserta',
+                    pengurus: 'Pengurus Sasana',
+                    instruktur: 'Instruktur / Pelatih'
+                };
+                return `${action} Data ${map[this.modalType]}`;
+            }
+        },
+        async mounted() {
+            await this.fetchProvinces();
+            await this.fetchSasanaDetails();
+            this.fetchAllData();
+            this.form = this.getEmptyForm('peserta');
+        },
+        methods: {
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            },
+            async fetchSasanaDetails() {
+                try {
+                    const response = await fetch('/api/sasana/');
+                    const data = await response.json();
+                    const sasanaId = {{ sasana.id|default:"null" }};
+                    if (sasanaId) {
+                        this.sasana = data.find(s => s.id === sasanaId);
+                    }
+                    if (this.sasana) {
+                        await this.fetchRegencies(false);
+                        await this.fetchDistricts(false);
+                        await this.fetchVillages(false);
+                    }
+                } catch (error) { console.error('Error fetching sasana:', error); }
+            },
+            copyToClipboard(text) {
+                // Buat URL lengkap jika path relatif
+                const fullUrl = text.startsWith('http') ? text : window.location.origin + text;
+                navigator.clipboard.writeText(fullUrl).then(() => {
+                    alert('Link sertifikat berhasil disalin!');
+                }).catch(err => {
+                    console.error('Gagal menyalin:', err);
+                });
+            },
+            async fetchAllData() {
+                await this.fetchPeserta();
+                await this.fetchPengurus();
+                await this.fetchInstruktur();
+            },
+            async fetchPeserta() {
+                try {
+                    const response = await fetch('/api/peserta/');
+                    const data = await response.json();
+                    const sasanaId = {{ sasana.id|default:"null" }};
+                    if (sasanaId) {
+                        this.pesertaList = data.filter(p => p.sasana === sasanaId);
+                        this.stats.total_peserta = this.pesertaList.length;
+                    }
+                } catch (error) { console.error('Error fetching peserta:', error); }
+            },
+            async fetchPengurus() {
+                try {
+                    const response = await fetch('/api/pengurus-sasana/');
+                    const data = await response.json();
+                    const sasanaId = {{ sasana.id|default:"null" }};
+                    if (sasanaId) {
+                        this.pengurusList = data.filter(item => item.sasana === sasanaId);
+                        this.stats.total_pengurus = this.pengurusList.length;
+                    }
+                } catch (error) { console.error(error); }
+            },
+            async fetchInstruktur() {
+                try {
+                    const response = await fetch('/api/instruktur/');
+                    const data = await response.json();
+                    const sasanaId = {{ sasana.id|default:"null" }};
+                    if (sasanaId) {
+                        this.instrukturList = data.filter(item => item.sasana === sasanaId);
+                        this.stats.total_instruktur = this.instrukturList.length;
+                    }
+                } catch (error) { console.error(error); }
+            },
+            async fetchProvinces() {
+                try {
+                    const response = await fetch('/api/proxy-wilayah/provinces.json');
+                    const json = await response.json();
+                    this.provinces = json.data || [];
+                } catch (error) { console.error('Error provinces:', error); }
+            },
+            async fetchRegencies(resetChild = false) {
+                if (resetChild) {
+                    this.sasana.kabupaten = '';
+                    this.sasana.kecamatan = '';
+                    this.sasana.kelurahan_desa = '';
+                    this.regencies = [];
+                    this.districts = [];
+                    this.villages = [];
+                }
+                if (!this.sasana.propinsi) return;
+                const selectedProv = this.provinces.find(p => p.name.toUpperCase() === this.sasana.propinsi.toUpperCase());
+                if (selectedProv) {
+                    try {
+                        const response = await fetch(`/api/proxy-wilayah/regencies/${selectedProv.code}.json`);
+                        const json = await response.json();
+                        this.regencies = json.data || [];
+                    } catch (error) { console.error(error); }
+                }
+            },
+            async fetchDistricts(resetChild = false) {
+                if (resetChild) {
+                    this.sasana.kecamatan = '';
+                    this.sasana.kelurahan_desa = '';
+                    this.districts = [];
+                    this.villages = [];
+                }
+                if (!this.sasana.kabupaten) return;
+                const selectedReg = this.regencies.find(r => r.name.toUpperCase() === this.sasana.kabupaten.toUpperCase());
+                if (selectedReg) {
+                    try {
+                        const response = await fetch(`/api/proxy-wilayah/districts/${selectedReg.code}.json`);
+                        const json = await response.json();
+                        this.districts = json.data || [];
+                    } catch (error) { console.error(error); }
+                }
+            },
+            async fetchVillages(resetChild = false) {
+                if (resetChild) {
+                    this.sasana.kelurahan_desa = '';
+                    this.villages = [];
+                }
+                if (!this.sasana.kecamatan) return;
+                const selectedDist = this.districts.find(d => d.name.toUpperCase() === this.sasana.kecamatan.toUpperCase());
+                if (selectedDist) {
+                    try {
+                        const response = await fetch(`/api/proxy-wilayah/villages/${selectedDist.code}.json`);
+                        const json = await response.json();
+                        this.villages = json.data || [];
+                    } catch (error) { console.error(error); }
+                }
+            },
+            handleProfileUpload(event) {
+                this.selectedFile = event.target.files[0];
+            },
+            async updateSasana() {
+                this.saving = true;
+                this.updateSuccess = false;
+                const formData = new FormData();
+                formData.append('nama', this.sasana.nama);
+                formData.append('propinsi', this.sasana.propinsi);
+                formData.append('kabupaten', this.sasana.kabupaten);
+                formData.append('kecamatan', this.sasana.kecamatan);
+                formData.append('kelurahan_desa', this.sasana.kelurahan_desa);
+                formData.append('alamat', this.sasana.alamat || '');
+                formData.append('map', this.sasana.map || '');
+                if (this.selectedFile) formData.append('profil', this.selectedFile);
+
+                try {
+                    const response = await fetch(`/api/sasana/${this.sasana.id}/`, {
+                        method: 'PATCH',
+                        headers: { 'X-CSRFToken': this.getCookie('csrftoken') },
+                        body: formData
+                    });
+                    if (response.ok) {
+                        this.updateSuccess = true;
+                        this.sasana = await response.json();
+                        this.selectedFile = null;
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        const err = await response.json();
+                        alert('Gagal memperbarui profil: ' + JSON.stringify(err));
+                    }
+                } catch (error) { console.error(error); } finally { this.saving = false; }
+            },
+            getEmptyForm(type) {
+                const base = {
+                    account: { username: '', nama: '', password: 'member123', role: type.toUpperCase() === 'PENGURUS' ? 'PENGURUS_SASANA' : type.toUpperCase() }
+                };
+                const sasanaId = {{ sasana.id|default:"null" }};
+                if (type === 'peserta') {
+                    return { ...base, nik: '', no_hp: '', tanggal_lahir: '', berat_badan: '', tinggi_badan: '', sasana: sasanaId };
+                } else if (type === 'pengurus') {
+                    return { ...base, jabatan: '', no_hp: '', sasana: sasanaId };
+                } else if (type === 'instruktur') {
+                    return { ...base, id_instruktur: '', sertifikat: '', no_hp: '', sasana: sasanaId };
+                }
+                return base;
+            },
+            openModal(type, item = null) {
+                this.modalType = type;
+                this.isEdit = !!item;
+                if (item) {
+                    this.form = JSON.parse(JSON.stringify(item));
+                    if (this.form.account) delete this.form.account.password;
+                } else {
+                    this.form = this.getEmptyForm(type);
+                }
+                this.selectedCertFile = null;
+                const modalEl = document.getElementById('formModal');
+                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+            },
+            fillFromPeserta(event) {
+                const pesertaId = parseInt(event.target.value);
+                if (!pesertaId) return;
+                const p = this.pesertaList.find(x => x.id === pesertaId);
+                if (p) {
+                    this.form.account.nama = p.account.nama;
+                    this.form.account.username = p.account.username;
+                    this.form.no_hp = p.no_hp;
+                }
+            },
+            handleCertUpload(event) {
+                const file = event.target.files[0];
+                if (file && file.size > 2 * 1024 * 1024) {
+                    alert('Ukuran file terlalu besar! Maksimal 2MB.');
+                    event.target.value = '';
+                    this.selectedCertFile = null;
+                    return;
+                }
+                this.selectedCertFile = file || null;
+            },
+            async saveItem() {
+                this.saving = true;
+                
+                // Paksa pengisian Sasana ID tepat sebelum kirim
+                if (this.sasana && this.sasana.id) {
+                    this.form.sasana = this.sasana.id;
+                }
+                const type = this.modalType;
+                const endpoint = type === 'pengurus' ? 'pengurus-sasana' : type;
+                const url = this.isEdit ? `/api/${endpoint}/${this.form.id}/` : `/api/${endpoint}/`;
+                const method = this.isEdit ? 'PATCH' : 'POST';
+
+                // Gunakan FormData untuk mendukung upload file
+                const formData = new FormData();
+                
+                // Tambahkan data account sebagai JSON string
+                if (this.form.account) {
+                    formData.append('account', JSON.stringify(this.form.account));
+                }
+                
+                // Tambahkan field lainnya
+                for (const key in this.form) {
+                    if (key !== 'account' && key !== 'sertifikat' && this.form[key] !== null) {
+                        formData.append(key, this.form[key]);
+                    }
+                }
+
+                // Tambahkan file sertifikat jika ada
+                if (this.selectedCertFile) {
+                    formData.append('sertifikat', this.selectedCertFile);
+                }
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'X-CSRFToken': this.getCookie('csrftoken')
+                        },
+                        body: formData
+                    });
+                    if (response.ok) {
+                        const modalEl = document.getElementById('formModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                        this.fetchAllData();
+                    } else {
+                        const err = await response.json();
+                        alert('Gagal menyimpan: ' + JSON.stringify(err));
+                    }
+                } catch (error) { console.error(error); } finally { this.saving = false; }
+            },
+            async deleteItem(type, id) {
+                if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+                const endpoint = type === 'pengurus' ? 'pengurus-sasana' : type;
+                try {
+                    const response = await fetch(`/api/${endpoint}/${id}/`, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                    });
+                    if (response.ok) this.fetchAllData();
+                } catch (error) { console.error(error); }
+            }
+        }
+    }).mount('#app')
+</script>
+{% endblock %}

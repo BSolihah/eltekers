@@ -1,0 +1,32 @@
+buatkan sasana.md berisi: 
+model: 
+account(username, password, nama email, role) - sebagai parent untuk semua user
+admin_daerah(account, daerah)
+admin_sasana(account, sasana)
+sasana(nama, admin_sasana,propinsi, kabupaten, kecamatan, kelurahan_desa, map, profil)
+pengurus_sasana(account, sasana, jabatan,  no_hp)
+instruktur(account, sasana, no_hp, sertifikat, id_instruktur)
+peserta(account, sasana, no_hp, tanggal_lahir,nik,berat_badan,tinggi_badan)
+keterbatasan_fisik(peserta, jenis_keterbatasan)
+kendala_kesehatan(peserta, jenis_penyakit)
+
+
+view:
+pendaftaran_sasana oleh admin_daerah, cukup mendaftarkan nama dan admin_sasana
+admin_daerah dapat melakukan edit dan view sasana 
+pendaftaran_peserta, edit dan view detail data peserta oleh admin_sasana, 
+pendaftaran_instruktur, edit dan view detail data instruktur oleh admin_sasana  
+pendaftaran_pengurus_sasana, edit dan view detail data pengurus_sasana oleh admin_sasana
+pendaftaran_keterbatasan_fisik, edit dan view detail data keterbatasan_fisik oleh admin_sasana
+pendaftaran_kendala_kesehatan, edit dan view detail data kendala_kesehatan oleh admin_sasana
+
+menampilkan daftar sasana berdasarkan propinsi, kabupaten, kecamatan, kelurahan_desa 
+edit_sasana oleh admin_sasana
+
+terapkan pendekatan REST API untuk setiap view menggunakan django rest framework    
+pemberian hak akses menggunakan role        
+pencarian peserta dapat dilakukan menggunakan nik atau nama
+pencarian sasana dapat dilakukan menggunakan map
+
+dashboard pengurus daerah menampilkan jumlah sasana, sebaran sasana di daerah, jumlah peserta, jumlah instruktur, jumlah pengurus sasana    
+dashboard pengurus sasana menampilkan jumlah peserta, jumlah instruktur, jumlah pengurus sasana    
