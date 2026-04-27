@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 # Salin file requirements dan install dependensi Python
 COPY requirements.txt /app/
 RUN pip install --upgrade pip && pip install -r requirements.txt
-RUN pip install gunicorn python-dotenv psycopg2-binary
+RUN pip install gunicorn python-dotenv psycopg2-binary dj-database-url
 
 # Salin seluruh kode proyek ke direktori kerja
 COPY . /app/

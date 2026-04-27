@@ -44,9 +44,14 @@ class PengurusSasanaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_internal_value(self, data):
+        # Convert QueryDict to standard dict to support nested dictionary values
+        if hasattr(data, 'dict'):
+            data = data.dict()
+        else:
+            data = data.copy()
+
         if 'account' in data and isinstance(data['account'], str):
             import json
-            data = data.copy()
             data['account'] = json.loads(data['account'])
         return super().to_internal_value(data)
 
@@ -79,9 +84,14 @@ class InstrukturSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_internal_value(self, data):
+        # Convert QueryDict to standard dict to support nested dictionary values
+        if hasattr(data, 'dict'):
+            data = data.dict()
+        else:
+            data = data.copy()
+
         if 'account' in data and isinstance(data['account'], str):
             import json
-            data = data.copy()
             data['account'] = json.loads(data['account'])
         return super().to_internal_value(data)
 
@@ -127,15 +137,23 @@ class PesertaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def to_internal_value(self, data):
+        # Convert QueryDict to standard dict to support nested dictionary values
+        if hasattr(data, 'dict'):
+            data = data.dict()
+        else:
+            data = data.copy()
+
         if 'account' in data and isinstance(data['account'], str):
             import json
-            data = data.copy()
             data['account'] = json.loads(data['account'])
         return super().to_internal_value(data)
 
     def create(self, validated_data):
         account_data = validated_data.pop('account')
-        account = Account.objects.create_user(**account_data)
+        username = account_data.get('username')
+        account = Account.objects.filter(username=username).first()
+        if not account:
+            account = Account.objects.create_user(**account_data)
         peserta = Peserta.objects.create(account=account, **validated_data)
         return peserta
 

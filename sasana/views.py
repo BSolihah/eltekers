@@ -61,6 +61,7 @@ def forgot_password_view(request):
 def register_view(request):
     if request.method == 'POST':
         try:
+            from django.db import transaction
             data = json.loads(request.body)
             # Validasi NIK unik (sederhana)
             if Peserta.objects.filter(nik=data.get('nik')).exists():
@@ -68,26 +69,31 @@ def register_view(request):
             if Account.objects.filter(username=data.get('username')).exists():
                 return JsonResponse({"error": "Username sudah digunakan."}, status=400)
             
-            # Buat Account
-            account = Account.objects.create_user(
-                username=data.get('username'),
-                password=data.get('password'),
-                nama=data.get('nama'),
-                email=data.get('email', ''),
-                role='PESERTA'
-            )
-            
-            # Buat Peserta
-            sasana = Sasana.objects.get(id=data.get('sasana_id'))
-            Peserta.objects.create(
-                account=account,
-                sasana=sasana,
-                nik=data.get('nik'),
-                no_hp=data.get('no_hp'),
-                tanggal_lahir=data.get('tanggal_lahir'),
-                berat_badan=data.get('berat_badan') or None,
-                tinggi_badan=data.get('tinggi_badan') or None
-            )
+            with transaction.atomic():
+                # Buat Account
+                account = Account.objects.create_user(
+                    username=data.get('username'),
+                    password=data.get('password'),
+                    nama=data.get('nama'),
+                    email=data.get('email', ''),
+                    role='PESERTA'
+                )
+                
+                # Buat Peserta
+                sasana = Sasana.objects.get(id=data.get('sasana_id'))
+                
+                berat_badan = data.get('berat_badan')
+                tinggi_badan = data.get('tinggi_badan')
+                
+                Peserta.objects.create(
+                    account=account,
+                    sasana=sasana,
+                    nik=data.get('nik'),
+                    no_hp=data.get('no_hp'),
+                    tanggal_lahir=data.get('tanggal_lahir'),
+                    berat_badan=berat_badan if berat_badan not in [None, ''] else 0,
+                    tinggi_badan=tinggi_badan if tinggi_badan not in [None, ''] else 0
+                )
             return JsonResponse({"message": "Berhasil daftar"}, status=201)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
@@ -102,12 +108,17 @@ def logout_view(request):
 def dashboard_daerah(request):
     if request.user.role != 'ADMIN_DAERAH':
         return redirect('landing')
-    stats = {
-        'total_sasana': Sasana.objects.count(),
-        'total_peserta': Peserta.objects.count(),
-        'total_instruktur': Instruktur.objects.count(),
-        'total_pengurus': PengurusSasana.objects.count(),
-    }
+    
+    from django.core.cache import cache
+    stats = cache.get('daerah_stats')
+    if not stats:
+        stats = {
+            'total_sasana': Sasana.objects.count(),
+            'total_peserta': Peserta.objects.count(),
+            'total_instruktur': Instruktur.objects.count(),
+            'total_pengurus': PengurusSasana.objects.count(),
+        }
+        cache.set('daerah_stats', stats, 300) # Cache selama 5 menit
     return render(request, 'dashboard_daerah.html', {'stats': stats})
 
 @login_required
@@ -125,11 +136,16 @@ def dashboard_sasana(request):
             'error': 'Profil Admin Sasana belum terhubung dengan Sasana manapun.'
         })
 
-    stats = {
-        'total_peserta': Peserta.objects.filter(sasana=sasana).count(),
-        'total_instruktur': Instruktur.objects.filter(sasana=sasana).count(),
-        'total_pengurus': PengurusSasana.objects.filter(sasana=sasana).count(),
-    }
+    from django.core.cache import cache
+    cache_key = f'sasana_stats_{sasana.id}'
+    stats = cache.get(cache_key)
+    if not stats:
+        stats = {
+            'total_peserta': Peserta.objects.filter(sasana=sasana).count(),
+            'total_instruktur': Instruktur.objects.filter(sasana=sasana).count(),
+            'total_pengurus': PengurusSasana.objects.filter(sasana=sasana).count(),
+        }
+        cache.set(cache_key, stats, 300)
 
     return render(request, 'dashboard_sasana.html', {
         'stats': stats,
