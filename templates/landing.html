@@ -54,7 +54,7 @@
             <p class="lead mb-4">Temukan sasana terdekat di wilayah Anda dan mulailah perjalanan kesehatan Anda hari
                 ini.</p>
             <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-sm-3">Daftar Sekarang</a>
-            <button @click="getLocation" class="btn btn-outline-secondary btn-lg px-4" :disabled="loadingLocation">
+            <button type="button" @click.prevent="getLocation" class="btn btn-outline-secondary btn-lg px-4" :disabled="loadingLocation">
                 <span v-if="loadingLocation"><i class="bi bi-hourglass-split"></i> Mencari...</span>
                 <span v-else><i class="bi bi-geo-alt-fill"></i> Cari 10 Sasana Terdekat (GPS)</span>
             </button>
@@ -90,8 +90,11 @@
             </div>
         </div>
     </div>
+    <div v-else-if="hasSearchedNearest" class="alert alert-info mb-5">
+        <i class="bi bi-info-circle-fill me-2"></i> Belum ada sasana yang terdaftar dengan koordinat di sistem.
+    </div>
 
-    <div v-if="locationError" class="alert alert-warning">
+    <div v-if="locationError" class="alert alert-warning mb-5">
         <i class="bi bi-exclamation-triangle-fill me-2"></i> [[ locationError ]]
     </div>
 
@@ -184,6 +187,7 @@
                 },
                 searchResults: [],
                 hasSearched: false,
+                hasSearchedNearest: false,
                 carouselImages: [],
                 provinces: [],
                 regencies: [],
@@ -242,6 +246,7 @@
             getLocation() {
                 this.locationError = '';
                 this.nearestSasana = [];
+                this.hasSearchedNearest = false;
 
                 if (!navigator.geolocation) {
                     this.locationError = 'Geolokasi tidak didukung oleh browser Anda.';
@@ -256,9 +261,10 @@
                     },
                     (error) => {
                         this.loadingLocation = false;
-                        this.locationError = 'Gagal mendapatkan lokasi Anda. Pastikan Anda mengizinkan akses lokasi.';
+                        this.locationError = 'Gagal mendapatkan lokasi Anda. Pastikan Anda mengizinkan akses lokasi. (' + error.message + ')';
                         console.error("Error getting location:", error);
-                    }
+                    },
+                    { timeout: 10000, enableHighAccuracy: true }
                 );
             },
             async fetchNearest(lat, lng) {
@@ -267,6 +273,7 @@
                     if (!response.ok) throw new Error('Network response was not ok');
                     const data = await response.json();
                     this.nearestSasana = data;
+                    this.hasSearchedNearest = true;
                 } catch (error) {
                     this.locationError = 'Terjadi kesalahan saat memuat data sasana terdekat.';
                     console.error('Error:', error);

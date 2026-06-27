@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('terapi/', include('terapi.urls')),
     path('', include('sasana.urls')),
 ]
 

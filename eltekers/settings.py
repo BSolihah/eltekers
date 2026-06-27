@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sasana',
     'rest_framework',
+    'terapi',
 ]
 
 MIDDLEWARE = [

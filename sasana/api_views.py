@@ -222,20 +222,36 @@ def proxy_wilayah(request, endpoint):
     if cached_data:
         return JsonResponse(cached_data, safe=False)
 
-    primary_url = f"https://www.emsifa.com/api-wilayah-indonesia/api/{endpoint}"
-    fallback_url = f"https://wilayah.id/api/{endpoint}"
+    import re
+    base_url = "https://api-regional-indonesia.vercel.app/api"
+    
+    if endpoint == "provinces.json":
+        target_url = f"{base_url}/provinces"
+    elif endpoint.startswith("regencies/"):
+        prov_id = re.search(r'regencies/(\d+)\.json', endpoint)
+        if prov_id:
+            target_url = f"{base_url}/cities/{prov_id.group(1)}"
+        else:
+            return JsonResponse({'error': 'Invalid province format'}, status=400)
+    elif endpoint.startswith("districts/"):
+        city_id = re.search(r'districts/(\d+)\.json', endpoint)
+        if city_id:
+            target_url = f"{base_url}/districts/{city_id.group(1)}"
+        else:
+            return JsonResponse({'error': 'Invalid city format'}, status=400)
+    elif endpoint.startswith("villages/"):
+        dist_id = re.search(r'villages/(\d+)\.json', endpoint)
+        if dist_id:
+            target_url = f"{base_url}/villages/{dist_id.group(1)}"
+        else:
+            return JsonResponse({'error': 'Invalid district format'}, status=400)
+    else:
+        return JsonResponse({'error': 'Endpoint not found'}, status=404)
     
     try:
-        # Mencoba primary source
-        try:
-            response = requests.get(primary_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
-            response.raise_for_status()
-            data = response.json()
-        except Exception:
-            # Jika primary gagal, coba fallback
-            response = requests.get(fallback_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
-            response.raise_for_status()
-            data = response.json()
+        response = requests.get(target_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
         # Normalisasi struktur respons
         if isinstance(data, list):

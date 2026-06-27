@@ -56,3 +56,4 @@ Seluruh view diimplementasikan menggunakan pendekatan **REST API** menggunakan D
 
 ## 5. Catatan Revisi & Perbaikan
 - **UI Dashboard Sasana**: Perbaikan tampilan tabel peserta agar header tidak keluar dari container/box (overflow issue).
+- **API Wilayah**: Migrasi dari API Emsifa & Wilayah.id ke API Regional Indonesia Vercel (`https://api-regional-indonesia.vercel.app/`). Proxy pada `proxy_wilayah` disesuaikan agar memetakan format URL emsifa (`.json` suffixes) secara internal ke format endpoint Vercel API.

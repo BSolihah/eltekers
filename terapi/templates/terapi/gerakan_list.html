@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Katalog Gerakan Acuan{% endblock %}
+
+{% block content %}
+<div id="gerakanApp" v-cloak>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Katalog Gerakan Terapi</h2>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <select v-model="filterKategori" class="form-select">
+                <option value="">Semua Kategori</option>
+                <option value="membangkitkan semangat">Membangkitkan Semangat</option>
+                <option value="cas aki">Cas Aki</option>
+                <option value="membangkitkan energi titik nol">Membangkitkan Energi Titik Nol</option>
+                <option value="pengendapan">Pengendapan</option>
+            </select>
+        </div>
+        <div class="col-md-8">
+            <input type="text" v-model="searchQuery" class="form-control" placeholder="Cari nama gerakan...">
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4" v-for="gerakan in filteredGerakan" :key="gerakan.id">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <span class="badge bg-primary mb-2">[[ gerakan.kategori_display ]]</span>
+                    <h5 class="card-title fw-bold">[[ gerakan.nama_gerakan ]]</h5>
+                    <p class="card-text text-muted small" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">[[ gerakan.fokus_gerakan ]]</p>
+                    <button @click="showDetail(gerakan)" class="btn btn-outline-primary btn-sm w-100">Lihat Detail</button>
+                </div>
+            </div>
+        </div>
+        <div v-if="filteredGerakan.length === 0" class="col-12 text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1"></i>
+            <p>Tidak ada gerakan ditemukan.</p>
+        </div>
+    </div>
+
+    <!-- Modal Detail -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" v-if="selectedGerakan">
+                <div class="modal-header border-0 bg-light">
+                    <h5 class="modal-title fw-bold">[[ selectedGerakan.nama_gerakan ]]</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="ratio ratio-16x9 mb-4 rounded overflow-hidden shadow-sm" v-if="selectedGerakan.link_youtube">
+                        <iframe :src="youtubeEmbedUrl(selectedGerakan.link_youtube)" allowfullscreen></iframe>
+                    </div>
+                    <h6 class="fw-bold text-primary">Manfaat</h6>
+                    <p>[[ selectedGerakan.manfaat ]]</p>
+                    <h6 class="fw-bold text-primary mt-3">Fokus Gerakan</h6>
+                    <p>[[ selectedGerakan.fokus_gerakan ]]</p>
+                    <h6 class="fw-bold text-primary mt-3">Panduan</h6>
+                    <div class="bg-light p-3 rounded">
+                        <p style="white-space: pre-wrap;" class="mb-0">[[ selectedGerakan.panduan_gerakan ]]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="/static/terapi/js/gerakan_app.js"></script>
+{% endblock %}
